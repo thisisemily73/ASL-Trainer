@@ -1,0 +1,1 @@
+This software is free to view for educational and portfolio purposes. Commercial use, redistribution, or replication of this platform for profit is strictly prohibited.

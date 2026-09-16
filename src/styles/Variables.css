@@ -1,0 +1,15 @@
+:root {
+    --primary: #1B2A4A;
+    --accent: #00A8A8;
+    --background: #F4F7F9;
+    --container: #FFFFFF;
+    --text: #2D3748;
+}
+
+:dark-mode {
+    --primary: #1B2A4A;
+    --accent: #00A8A8;
+    --background: #1A202C;
+    --container: #2D3748;
+    --text: #E2E8F0;
+}
