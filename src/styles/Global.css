@@ -1,0 +1,27 @@
+/* FONT INHERITANCE */
+
+/* Import Lexend from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Lexend', sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button, input, textarea {
+    font-family: 'Lexend', sans-serif;
+}
+
+/* GENERAL PAGE STYLES */
+
+.page {
+    margin: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}

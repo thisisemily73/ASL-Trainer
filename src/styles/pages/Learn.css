@@ -1,0 +1,198 @@
+.learn-content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 60px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.path-main-immersive {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.unit-banner h2 {
+  color: var(--primary);
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 30px;
+}
+
+/* Center the path container directly on the page grid */
+.path-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Make the SVG fill the exact container size so coordinates match */
+.path-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Nodes container */
+.path-nodes {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 70px; /* Space between nodes */
+  width: 100%;
+  align-items: center;
+  padding: 30px 0;
+}
+
+/* Exact offsets that match a 400px wide SVG canvas (Center is 200, Left is ~80, Right is ~320) */
+.node-left {
+  align-self: flex-start;
+  margin-left: 40px;
+}
+
+.node-right {
+  align-self: flex-end;
+  margin-right: 40px;
+}
+
+.node-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.node-circle {
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: bold;
+  box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.node-wrapper.completed .node-circle {
+  background: var(--primary);
+}
+
+.node-wrapper.active .active-circle {
+  background: var(--accent); /* Turquoise */
+  box-shadow: 0 6px 0 var(--hover-accent);
+  transform: scale(1.1);
+}
+
+.node-wrapper.locked .node-circle {
+  background: var(--border-color);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.05);
+  color: var(--muted-text);
+}
+
+.node-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: 8px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.node-status {
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: var(--muted-text);
+  text-align: center;
+}
+
+.node-status.active-text {
+  color: var(--accent);
+}
+
+.start-btn {
+  margin-top: 6px;
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  font-weight: bold;
+  font-size: 0.75rem;
+  border-radius: 20px;
+  cursor: pointer;
+  box-shadow: 0 3px 0 var(--hover-accent);
+  transition: transform 0.1s ease;
+}
+
+.start-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--hover-accent);
+}
+
+/* Sidebar styling */
+.learn-sidebar-minimal {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  padding-top: 10px;
+}
+
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-group h3 {
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+  color: var(--muted-text);
+  margin: 0 0 5px 0;
+}
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.culture-spotlight-minimal {
+  border-left: none;
+  padding-left: 0;
+}
+
+.culture-banner-text {
+  color: var(--accent);
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+.culture-spotlight-minimal p {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.4;
+  margin: 0;
+  opacity: 0.85;
+}

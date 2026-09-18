@@ -1,0 +1,62 @@
+.topbar {
+    background-color: var(--container);
+    color: var(--text);
+    height: 70px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.topbar-left .logo {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--primary);
+    /* If you want a touch of your turquoise accent on the logo: */
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 2px;
+    text-decoration: none;
+}
+
+.topbar-right .links {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.topbar-right .links a {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+    position: relative;
+    padding: 4px 0;
+}
+
+/* Hover effect using your accent color */
+.topbar-right .links a:hover {
+    color: var(--accent);
+}
+
+/* Sleek animated underline on hover */
+.topbar-right .links a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    background-color: var(--accent);
+    transition: width 0.2s ease;
+}
+
+.topbar-right .links a:hover::after {
+    width: 100%;
+}

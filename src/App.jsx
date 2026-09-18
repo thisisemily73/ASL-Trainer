@@ -3,11 +3,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Topbar from './components/Topbar'
 
-import Home from './pages/Dashboard'
-import Lessons from './pages/Lessons'
+import Dashboard from './pages/Dashboard'
+import Learn from './pages/Learn'
 import Sandbox from './pages/Sandbox'
 import Vocab from './pages/Vocab'
-import Settings from './pages/Settings'
+import Profile from './pages/Profile'
 
 function App() {
 
@@ -29,11 +29,11 @@ function App() {
                     <Topbar />
                     <main>
                         <Routes>
-                            <Route path="/dashboard" element={<Home />} />
-                            <Route path="/lessons" element={<Lessons />} />
+                            <Route path="/" element={<Learn />} />
+                            <Route path="/dashboard" element={<Dashboard />} />
                             <Route path="/sandbox" element={<Sandbox />} />
                             <Route path="/vocab" element={<Vocab />} />
-                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/profile" element={<Profile />} />
                         </Routes>
                     </main>
                 </div>
