@@ -1,8 +1,6 @@
-// CHARACTERS
 import { alphabet } from "./alphabet.js";
 import { numbers } from "./numbers.js";
 
-// EVERYDAY
 import { greetings } from "./greetings.js";
 import { manners } from "./manners.js";
 

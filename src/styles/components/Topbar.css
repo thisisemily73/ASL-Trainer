@@ -18,7 +18,6 @@
     font-weight: 700;
     font-size: 1.25rem;
     color: var(--primary);
-    /* If you want a touch of your turquoise accent on the logo: */
     border-bottom: 3px solid var(--accent);
     padding-bottom: 2px;
     text-decoration: none;
@@ -40,12 +39,10 @@
     padding: 4px 0;
 }
 
-/* Hover effect using your accent color */
 .topbar-right .links a:hover {
     color: var(--accent);
 }
 
-/* Sleek animated underline on hover */
 .topbar-right .links a::after {
     content: '';
     position: absolute;

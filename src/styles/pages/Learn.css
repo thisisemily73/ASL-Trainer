@@ -22,7 +22,6 @@
   margin-bottom: 30px;
 }
 
-/* Center the path container directly on the page grid */
 .path-container {
   position: relative;
   width: 100%;
@@ -33,7 +32,6 @@
   align-items: center;
 }
 
-/* Make the SVG fill the exact container size so coordinates match */
 .path-svg {
   position: absolute;
   top: 0;
@@ -44,7 +42,6 @@
   pointer-events: none;
 }
 
-/* Nodes container */
 .path-nodes {
   position: relative;
   z-index: 2;
@@ -56,7 +53,6 @@
   padding: 30px 0;
 }
 
-/* Exact offsets that match a 400px wide SVG canvas (Center is 200, Left is ~80, Right is ~320) */
 .node-left {
   align-self: flex-start;
   margin-left: 40px;
@@ -147,7 +143,6 @@
   box-shadow: 0 1px 0 var(--hover-accent);
 }
 
-/* Sidebar styling */
 .learn-sidebar-minimal {
   display: flex;
   flex-direction: column;

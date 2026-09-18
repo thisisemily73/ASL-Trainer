@@ -15,3 +15,7 @@
 
 ### September 17, 2026
 - Started creating sign data in "signDictionary" and separate subfiles for organization.
+
+### September 18, 2026
+- Separated the CameraBox from Sandbox (turned it into a component for multi-page use)
+- Made limbs show in CameraBox with turquoise dots and navy blue lines (representative of deaf awareness colors)

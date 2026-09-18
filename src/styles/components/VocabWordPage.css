@@ -1,0 +1,161 @@
+.vocab-sign-page {
+    padding: 2rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    transition: opacity 0.2s;
+}
+
+.back-btn:hover {
+    opacity: 0.8;
+}
+
+.practice-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    background-color: var(--container);
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.practice-icon-box {
+    font-size: 3rem;
+    background-color: var(--background);
+    padding: 1rem;
+    border-radius: 12px;
+}
+
+.practice-title-group h1 {
+    color: var(--primary);
+    margin: 0 0 0.5rem 0;
+    font-size: 1.8rem;
+}
+
+.badge-container {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.sign-unit-badge, .sign-cat-badge {
+    background-color: var(--background);
+    color: var(--text);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Split Grid Layout */
+.practice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .practice-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.practice-card {
+    background-color: var(--container);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+}
+
+.instructions-card h3 {
+    color: var(--primary);
+    margin-top: 0;
+}
+
+.instruction-text {
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.tips-section {
+    margin-top: auto;
+    background-color: var(--background);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+}
+
+.tips-section h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--primary);
+}
+
+.tips-section ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    color: var(--text);
+    font-size: 0.95rem;
+}
+
+/* Camera Viewfinder Box */
+.camera-viewfinder {
+    background-color: var(--background);
+    border: 2px dashed rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.camera-placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.camera-icon {
+    font-size: 2.5rem;
+}
+
+.status-badge.waiting {
+    background-color: #FEF3C7;
+    color: #D97706;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+.primary-action-btn {
+    background-color: var(--accent);
+    color: #ffffff;
+    border: none;
+    padding: 0.85rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.primary-action-btn:hover {
+    opacity: 0.9;
+}

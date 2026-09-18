@@ -1,6 +1,3 @@
-/* FONT INHERITANCE */
-
-/* Import Lexend from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap');
 
 body {
@@ -16,8 +13,6 @@ body {
 button, input, textarea {
     font-family: 'Lexend', sans-serif;
 }
-
-/* GENERAL PAGE STYLES */
 
 .page {
     margin: 2rem;
