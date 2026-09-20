@@ -25,3 +25,4 @@
 - Used basic finger positions to recognize the letters A and B, and tested thumb out (successful)
 - Sign detection shows in Sandbox
 - Fixed the render loop and ref stabilization issues to stop video flashing/stuttering
+- Expanded sign recognition to include: A, B, E, I, L, S, U, and V

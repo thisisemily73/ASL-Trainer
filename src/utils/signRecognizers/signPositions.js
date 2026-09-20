@@ -26,51 +26,82 @@
 // DIP: connects to previous joint (PIP)
 // TIP: tip of finger (farthest from palm)
 
-// Helper to check if a finger is extended
+const acceptedOffset = 0.025; // Adjust this value based on testing
+
+// EXTENDED
 export const isIndexUp = (landmarks) => {
-    return landmarks[7].y < landmarks[6].y;
+    return landmarks[7].y < landmarks[6].y - acceptedOffset;
 };
 
 export const isMiddleUp = (landmarks) => {
-    return landmarks[11].y < landmarks[10].y;
+    return landmarks[11].y < landmarks[10].y - acceptedOffset;
 };
 
 export const isRingUp = (landmarks) => {
-    return landmarks[15].y < landmarks[14].y;
+    return landmarks[15].y < landmarks[14].y - acceptedOffset;
 };
 
 export const isPinkyUp = (landmarks) => {
-    return landmarks[19].y < landmarks[18].y;
+    return landmarks[19].y < landmarks[18].y - acceptedOffset;
 };
 
-// Helper to check if a finger is curled
+// CURLED
 
 export const isIndexCurled = (landmarks) => {
-    return landmarks[8].y > landmarks[6].y;
+    return landmarks[7].y > landmarks[6].y + acceptedOffset;
 };
 
 export const isMiddleCurled = (landmarks) => {
-    return landmarks[12].y > landmarks[10].y;
+    return landmarks[11].y > landmarks[10].y + acceptedOffset;
 };
 
 export const isRingCurled = (landmarks) => {
-    return landmarks[16].y > landmarks[14].y;
+    return landmarks[15].y > landmarks[14].y + acceptedOffset;
 };
 
 export const isPinkyCurled = (landmarks) => {
-    return landmarks[20].y > landmarks[18].y;
+    return landmarks[19].y > landmarks[18].y + acceptedOffset;
 };
 
-// Thumb Helpers
-// Thumb curl detection is more complex due to its range of motion
+// CLAWED
 
-export const isThumbUp = (landmarks) => {
-    return landmarks[4].y < landmarks[3].y;
-};
+export const isIndexClawed = (landmarks) => {
+    return landmarks[7].y === landmarks[8].y && landmarks[7].y > landmarks[6].y + acceptedOffset
+        || landmarks[7].y < landmarks[5].y - acceptedOffset;
+}
+
+export const isMiddleClawed = (landmarks) => {
+    return landmarks[11].y === landmarks[12].y && landmarks[11].y > landmarks[10].y + acceptedOffset
+        || landmarks[11].y < landmarks[9].y - acceptedOffset;
+}
+
+export const isRingClawed = (landmarks) => {
+    return landmarks[15].y === landmarks[16].y && landmarks[15].y > landmarks[14].y + acceptedOffset
+        || landmarks[15].y < landmarks[13].y - acceptedOffset;
+}
+
+export const isPinkyClawed = (landmarks) => {
+    return landmarks[19].y === landmarks[20].y && landmarks[19].y > landmarks[18].y + acceptedOffset
+        || landmarks[19].y < landmarks[17].y - acceptedOffset;
+}
 
 // Helper to calculate distance
 const getDistance = (p1, p2) => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2));
+};
+
+export const indexMiddleTogether = (landmarks) => {
+    const indexTip = landmarks[8];
+    const middleTip = landmarks[12];
+    const distance = getDistance(indexTip, middleTip);
+    const palmWidth = getDistance(landmarks[5], landmarks[17]);
+    return distance < palmWidth * 0.5; // Adjust threshold based on testing
+};
+
+// THUMB POSITIONS
+
+export const isThumbUp = (landmarks) => {
+    return landmarks[4].y < landmarks[3].y - acceptedOffset;
 };
 
 export const isThumbOut = (landmarks) => {
@@ -111,5 +142,5 @@ export const isThumbIn = (landmarks) => {
     const palmWidth = getDistance(indexMCP, pinkyKnuckle);
     const thumbRatio = thumbDistance / palmWidth;
 
-    return thumbRatio < 0.8; // Adjust threshold based on testing
+    return thumbRatio < 1; // Adjust threshold based on testing
 };

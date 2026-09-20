@@ -4,9 +4,6 @@ import * as alphabetRecognizers from '../utils/signRecognizers/alphabetRecognize
 
 import { detectSign } from '../utils/signDetector/detectSign';
 
-const detectSignA = alphabetRecognizers.detectSignA;
-const detectThumbOut = alphabetRecognizers.detectThumbOut;
-
 function CameraBox({
     height = '400px',
     title = "LIVE ASL SANDBOX",
@@ -176,7 +173,6 @@ function CameraBox({
 
             ctx.restore();
 
-            ctx.restore();
         }
 
         // Keep the loop alive seamlessly
