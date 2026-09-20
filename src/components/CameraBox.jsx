@@ -1,5 +1,11 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { HandLandmarker, PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
+import * as alphabetRecognizers from '../utils/signRecognizers/alphabetRecognizer';
+
+import { detectSign } from '../utils/signDetector/detectSign';
+
+const detectSignA = alphabetRecognizers.detectSignA;
+const detectThumbOut = alphabetRecognizers.detectThumbOut;
 
 function CameraBox({
     height = '400px',
@@ -125,6 +131,15 @@ function CameraBox({
             if (handResults.landmarks && handResults.landmarks.length > 0) {
                 hasBodyOrHand = true;
                 const currentHand = handResults.landmarks[0];
+                
+                // DETECT SIGN LOGIC
+                const resultMessage = detectSign(currentHand);
+                console.log(resultMessage);
+
+                if (onSignDetected) {
+                    onSignDetected(resultMessage, resultMessage.includes("Detected") ? 100 : 50);
+                }
+
                 const flattenedCoordinates = currentHand.flatMap(lm => [lm.x, lm.y, lm.z]);
 
                 frameHistoryRef.current.push(flattenedCoordinates);
