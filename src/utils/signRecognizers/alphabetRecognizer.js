@@ -75,8 +75,7 @@ export const detectSignL = (landmarks) => {
         isMiddleCurled(landmarks) &&
         isRingCurled(landmarks) &&
         isPinkyCurled(landmarks) &&
-        isThumbOut(landmarks) &&
-        !isThumbUp(landmarks)
+        isThumbOut(landmarks)
     );
 };
 

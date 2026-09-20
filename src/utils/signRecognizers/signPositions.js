@@ -156,7 +156,7 @@ export const isThumbOut = (landmarks) => {
 
     // Check that the thumb isn't just pointing straight up
     // If the thumb tip is significantly higher than its IP joint, it's pointing up.
-    const isPointingUp = thumbTip.y < thumbIP.y - 0.05; // tweak threshold if needed
+    const isPointingUp = thumbTip.y < thumbIP.y - 0.025; // tweak threshold if needed
     if (isPointingUp) {
         return false; // It's up, not "out" to the side!
     }
