@@ -19,3 +19,9 @@
 ### September 18, 2026
 - Separated the CameraBox from Sandbox (turned it into a component for multi-page use)
 - Made limbs show in CameraBox with turquoise dots and navy blue lines (representative of deaf awareness colors)
+
+### September 19, 2026
+- Created basic finger position recognition (is each finger up or curled, is the thumb out or in)
+- Used basic finger positions to recognize the letters A and B, and tested thumb out (successful)
+- Sign detection shows in Sandbox
+- Fixed the render loop and ref stabilization issues to stop video flashing/stuttering

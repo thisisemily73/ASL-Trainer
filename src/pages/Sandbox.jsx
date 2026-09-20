@@ -14,42 +14,44 @@ function Sandbox() {
 
             <div className="sandbox-workspace">
                 {/* Modular Camera Component passing sign updates up to Sandbox */}
-                <CameraBox 
-                    title="" 
+                <CameraBox
+                    title=""
                     onSignDetected={(sign, conf) => {
                         setRecognizedSign(sign);
                         setConfidence(conf);
                     }}
-                    renderCanvas={(canvasRef) => (
-                        <canvas ref={canvasRef} className="mediapipe-canvas" />
-                    )}
                 />
 
                 {/* Real-Time Interpretation Output Panel */}
                 <div className="interpretation-panel">
-                    <h3>LIVE RECOGNITION</h3>
-                    <div className="output-display-box">
-                        <span className="interpreted-sign-text">{recognizedSign}</span>
-                    </div>
+                    {/* ... rest of your panel code ... */}
 
-                    <div className="confidence-meter-group">
-                        <label>Tracking Accuracy Match</label>
-                        <div className="progress-bar-bg">
-                            <div
-                                className="progress-bar-fill"
-                                style={{ width: `${confidence}%` }}
-                            ></div>
+                    {/* Real-Time Interpretation Output Panel */}
+                    <div className="interpretation-panel">
+                        <h3>LIVE RECOGNITION</h3>
+                        <div className="output-display-box">
+                            <span className="interpreted-sign-text">{recognizedSign}</span>
                         </div>
-                        <span className="confidence-value">{confidence}%</span>
-                    </div>
 
-                    <div className="sandbox-tips">
-                        <h4>💡 MediaPipe Sandbox Tips</h4>
-                        <ul>
-                            <li>Make sure your entire hand fits inside the camera view.</li>
-                            <li>Bright front-lighting helps the model track all 21 hand joints accurately.</li>
-                            <li>Joints render in <strong>Turquoise</strong> and lines render in <strong>Navy Blue</strong>!</li>
-                        </ul>
+                        <div className="confidence-meter-group">
+                            <label>Tracking Accuracy Match</label>
+                            <div className="progress-bar-bg">
+                                <div
+                                    className="progress-bar-fill"
+                                    style={{ width: `${confidence}%` }}
+                                ></div>
+                            </div>
+                            <span className="confidence-value">{confidence}%</span>
+                        </div>
+
+                        <div className="sandbox-tips">
+                            <h4>💡 MediaPipe Sandbox Tips</h4>
+                            <ul>
+                                <li>Make sure your entire hand fits inside the camera view.</li>
+                                <li>Bright front-lighting helps the model track all 21 hand joints accurately.</li>
+                                <li>Joints render in <strong>Turquoise</strong> and lines render in <strong>Navy Blue</strong>!</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

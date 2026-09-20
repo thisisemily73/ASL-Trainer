@@ -24,6 +24,7 @@ function CameraBox({
 
     const [isCameraActive, setIsCameraActive] = useState(false);
     const frameHistoryRef = useRef([]);
+    const lastSentSignRef = useRef(''); // <-- ADD THIS LINE HERE
 
     useEffect(() => {
         async function setupLandmarkers() {
@@ -62,6 +63,14 @@ function CameraBox({
             if (poseLandmarkerRef.current) poseLandmarkerRef.current.close();
         };
     }, []);
+
+
+    // Safely attach the media stream when the camera turns active
+    useEffect(() => {
+        if (isCameraActive && videoRef.current && mediaStreamRef.current) {
+            videoRef.current.srcObject = mediaStreamRef.current;
+        }
+    }, [isCameraActive]);
 
     const startCamera = async () => {
         try {
@@ -120,28 +129,27 @@ function CameraBox({
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             let hasBodyOrHand = false;
-
-            if (poseResults.landmarks && poseResults.landmarks.length > 0) {
-                hasBodyOrHand = true;
-                for (const landmarks of poseResults.landmarks) {
-                    drawPoseSkeleton(ctx, landmarks, canvas.width, canvas.height);
-                }
-            }
+            let resultMessage = 'No body/hands detected';
+            let confidenceScore = 0;
 
             if (handResults.landmarks && handResults.landmarks.length > 0) {
                 hasBodyOrHand = true;
                 const currentHand = handResults.landmarks[0];
-                
-                // DETECT SIGN LOGIC
-                const resultMessage = detectSign(currentHand);
-                console.log(resultMessage);
 
-                if (onSignDetected) {
-                    onSignDetected(resultMessage, resultMessage.includes("Detected") ? 100 : 50);
+                // DETECT SIGN LOGIC
+                const detected = detectSign(currentHand);
+                console.log("Detected sign:", detected);
+
+                // If your detectSign function found a letter
+                if (detected && !detected.includes("Unknown") && !detected.includes("No sign")) {
+                    resultMessage = detected;
+                    confidenceScore = 95;
+                } else {
+                    resultMessage = 'Hand Detected (Hold pose...)';
+                    confidenceScore = 60;
                 }
 
                 const flattenedCoordinates = currentHand.flatMap(lm => [lm.x, lm.y, lm.z]);
-
                 frameHistoryRef.current.push(flattenedCoordinates);
                 if (frameHistoryRef.current.length > 30) {
                     frameHistoryRef.current.shift();
@@ -150,13 +158,23 @@ function CameraBox({
                 for (const landmarks of handResults.landmarks) {
                     drawHandSkeleton(ctx, landmarks, canvas.width, canvas.height);
                 }
+            } else if (poseResults.landmarks && poseResults.landmarks.length > 0) {
+                hasBodyOrHand = true;
+                resultMessage = 'Body Tracked (Show your hand)';
+                confidenceScore = 40;
+
+                for (const landmarks of poseResults.landmarks) {
+                    drawPoseSkeleton(ctx, landmarks, canvas.width, canvas.height);
+                }
             }
 
-            if (hasBodyOrHand) {
-                if (onSignDetected) onSignDetected('Body & Hands Tracked (Analyzing...)', 90);
-            } else {
-                if (onSignDetected) onSignDetected('No body/hands detected', 0);
+            // Send the final calculated message up to Sandbox ONLY IF IT CHANGES
+            if (onSignDetected && resultMessage !== lastSentSignRef.current) {
+                lastSentSignRef.current = resultMessage;
+                onSignDetected(resultMessage, confidenceScore);
             }
+
+            ctx.restore();
 
             ctx.restore();
         }
@@ -237,12 +255,7 @@ function CameraBox({
                 {isCameraActive ? (
                     <>
                         <video
-                            ref={node => {
-                                videoRef.current = node;
-                                if (node && mediaStreamRef.current) {
-                                    node.srcObject = mediaStreamRef.current;
-                                }
-                            }}
+                            ref={videoRef}
                             className="webcam-video"
                             autoPlay
                             playsInline
