@@ -66,23 +66,23 @@ export const isPinkyCurled = (landmarks) => {
 // CLAWED
 
 export const isIndexClawed = (landmarks) => {
-    return landmarks[7].y === landmarks[8].y && landmarks[7].y > landmarks[6].y + acceptedOffset
-        || landmarks[7].y < landmarks[5].y - acceptedOffset;
-}
+    return (landmarks[7].y > landmarks[8].y - acceptedOffset) && (landmarks[7].y > landmarks[6].y + acceptedOffset
+        || landmarks[7].y < landmarks[5].y - acceptedOffset);
+};
 
 export const isMiddleClawed = (landmarks) => {
-    return landmarks[11].y === landmarks[12].y && landmarks[11].y > landmarks[10].y + acceptedOffset
-        || landmarks[11].y < landmarks[9].y - acceptedOffset;
-}
+    return (landmarks[11].y > landmarks[12].y - acceptedOffset) && (landmarks[11].y > landmarks[10].y + acceptedOffset
+        || landmarks[11].y < landmarks[9].y - acceptedOffset);
+};
 
 export const isRingClawed = (landmarks) => {
-    return landmarks[15].y === landmarks[16].y && landmarks[15].y > landmarks[14].y + acceptedOffset
-        || landmarks[15].y < landmarks[13].y - acceptedOffset;
-}
+    return (landmarks[15].y > landmarks[16].y - acceptedOffset) && (landmarks[15].y > landmarks[14].y + acceptedOffset
+        || landmarks[15].y < landmarks[13].y - acceptedOffset);
+};
 
 export const isPinkyClawed = (landmarks) => {
-    return landmarks[19].y === landmarks[20].y && landmarks[19].y > landmarks[18].y + acceptedOffset
-        || landmarks[19].y < landmarks[17].y - acceptedOffset;
+    return (landmarks[19].y > landmarks[20].y - acceptedOffset) && (landmarks[19].y > landmarks[18].y + acceptedOffset
+        || landmarks[19].y < landmarks[17].y - acceptedOffset);
 }
 
 // Helper to calculate distance
