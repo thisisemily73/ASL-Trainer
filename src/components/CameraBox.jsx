@@ -135,7 +135,7 @@ function CameraBox({
 
                 // DETECT SIGN LOGIC
                 const detected = detectSign(currentHand);
-                console.log("Detected sign:", detected);
+                // console.log("Detected sign:", detected);
 
                 // If your detectSign function found a letter
                 if (detected && !detected.includes("Unknown") && !detected.includes("No sign")) {

@@ -30,3 +30,4 @@
 
 ## September 20, 2026
 - Introduced finger spacing for certain signs
+- Signing the letter B wasn't working because the offset was too small for the distance between the tip of the ring finger and the tip of the pinky when they are together. Fixed by increasing the allowed offset.
