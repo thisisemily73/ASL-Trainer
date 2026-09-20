@@ -12,6 +12,7 @@
 - Chose site font as Lexend to improve accessibility and easy readability for all users
 - Created 'Global.css' for CSS addition to all pages
 - Made the basic learn page with hardcoded Unit 1 learning path
+- Made the basic Sandbox page
 
 ### September 17, 2026
 - Started creating sign data in "signDictionary" and separate subfiles for organization.
@@ -26,3 +27,6 @@
 - Sign detection shows in Sandbox
 - Fixed the render loop and ref stabilization issues to stop video flashing/stuttering
 - Expanded sign recognition to include: A, B, E, I, L, S, U, and V
+
+## September 20, 2026
+- Introduced finger spacing for certain signs

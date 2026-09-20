@@ -90,10 +90,27 @@ const getDistance = (p1, p2) => {
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2));
 };
 
+//  FINGER SPACING
 export const indexMiddleTogether = (landmarks) => {
     const indexTip = landmarks[8];
     const middleTip = landmarks[12];
     const distance = getDistance(indexTip, middleTip);
+    const palmWidth = getDistance(landmarks[5], landmarks[17]);
+    return distance < palmWidth * 0.5; // Adjust threshold based on testing
+};
+
+export const middleRingTogether = (landmarks) => {
+    const middleTip = landmarks[12];
+    const ringTip = landmarks[16];
+    const distance = getDistance(middleTip, ringTip);
+    const palmWidth = getDistance(landmarks[5], landmarks[17]);
+    return distance < palmWidth * 0.5; // Adjust threshold based on testing
+};
+
+export const ringPinkyTogether = (landmarks) => {
+    const ringTip = landmarks[16];
+    const pinkyTip = landmarks[20];
+    const distance = getDistance(ringTip, pinkyTip);
     const palmWidth = getDistance(landmarks[5], landmarks[17]);
     return distance < palmWidth * 0.5; // Adjust threshold based on testing
 };
