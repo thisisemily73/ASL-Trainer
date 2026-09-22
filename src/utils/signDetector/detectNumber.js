@@ -6,7 +6,7 @@ import { detectNumberSign } from "../signRecognizers/numberRecognizer";
  * Receives MediaPipe landmarks, checks the flexible array matrix dictionary,
  * and passes a formatted response directly to your CameraBox front-end UI.
  */
-export const detectAlphabet = (landmarks) => {
+export const detectNumber = (landmarks) => {
     if (!landmarks || landmarks.length === 0) {
         return "No sign detected";
     }

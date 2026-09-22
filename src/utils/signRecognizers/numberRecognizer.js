@@ -60,6 +60,6 @@ const NUMBER_SIGN_MATRIX = {
     }
 };
 
-export const recognizeNumberSign = (landmarks) => {
+export const detectNumberSign = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return null;
 };
