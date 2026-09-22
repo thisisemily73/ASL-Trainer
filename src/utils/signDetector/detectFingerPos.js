@@ -10,9 +10,9 @@ export const detectFingerPositions = (landmarks) => {
     //     if (signPositions.isRingUp(landmarks)) {
     //     return "Ring finger is up";
     // } else 
-        if (signPositions.isPinkyUp(landmarks)) {
-        return "Pinky finger is up";
-    } else 
+    //     if (signPositions.isPinkyUp(landmarks)) {
+    //     return "Pinky finger is up";
+    // } else 
     //     if (signPositions.isIndexCurled(landmarks)) {
     //     return "Index finger is curled";
     // } else 
@@ -23,9 +23,9 @@ export const detectFingerPositions = (landmarks) => {
     //     return "Ring finger is curled";
     // } else
      
-        if (signPositions.isPinkyCurled(landmarks)) {
-        return "Pinky finger is curled";
-    } else 
+    //     if (signPositions.isPinkyCurled(landmarks)) {
+    //     return "Pinky finger is curled";
+    // } else 
         // if (signPositions.isIndexClawed(landmarks)) {
         // return "Index finger is clawed";
     // } else 
@@ -35,9 +35,12 @@ export const detectFingerPositions = (landmarks) => {
         // if (signPositions.isRingClawed(landmarks)) {
         // return "Ring finger is clawed";
     // } else 
-        if (signPositions.isPinkyClawed(landmarks)) {
-        return "Pinky finger is clawed";
-    } else {
-        return "error: No finger position detected";
-    }
+        // if (signPositions.isPinkyClawed(landmarks)) {
+        // return "Pinky finger is clawed";
+    // } else
+        if (signPositions.isThumbIn(landmarks)) {
+            return "Thumb is in";
+        } else {
+            return "error: No finger position detected";
+        }
 };

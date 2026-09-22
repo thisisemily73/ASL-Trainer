@@ -1,190 +1,137 @@
-// HAND LANDMARKS
-// 0: Wrist
-// 1: Thumb CMC
-// 2: Thumb MCP
-// 3: Thumb IP
-// 4: Thumb TIP
-// 5: Index finger MCP
-// 6: Index finger PIP
-// 7: Index finger DIP
-// 8: Index finger TIP
-// 9: Middle finger MCP
-// 10: Middle finger PIP
-// 11: Middle finger DIP
-// 12: Middle finger TIP
-// 13: Ring finger MCP
-// 14: Ring finger PIP
-// 15: Ring finger DIP
-// 16: Ring finger TIP
-// 17: Pinky MCP
-// 18: Pinky PIP
-// 19: Pinky DIP
-// 20: Pinky TIP
+// signPositions.js
 
-// CMC AND MCP: connects to palm
-// PIP: connects to previous joint (CMC/MCP)
-// DIP: connects to previous joint (PIP)
-// TIP: tip of finger (farthest from palm)
+const indexMCP = 5;   const indexPIP = 6;   const indexTIP = 8;
+const middleMCP = 9;  const middlePIP = 10;  const middleTIP = 12;
+const ringMCP = 13;   const ringPIP = 14;   const ringTIP = 16;
+const pinkyMCP = 17;  const pinkyPIP = 18;  const pinkyTIP = 20;
+const thumbMCP = 2;   const thumbTIP = 4;
 
+let lastStableRotation = "VT";
 
-// MCP: Metacarpophalangeal joint (base of finger)
-const indexMCP = 5;
-const middleMCP = 9;
-const ringMCP = 13;
-const pinkyMCP = 17;
-
-// PIP: Proximal interphalangeal joint (middle joint of finger)
-const indexPIP = 6;
-const middlePIP = 10;
-const ringPIP = 14;
-const pinkyPIP = 18;
-
-// DIP: Distal interphalangeal joint (joint closest to fingertip)
-const indexDIP = 7;
-const middleDIP = 11;
-const ringDIP = 15;
-const pinkyDIP = 19;
-
-// TIP: Fingertip
-const indexTIP = 8;
-const middleTIP = 12;
-const ringTIP = 16;
-const pinkyTIP = 20;
-
-// THUMB JOINTS
-const thumbCMC = 1; // Carpometacarpal joint (base of thumb)
-const thumbMCP = 2; // Metacarpophalangeal joint (middle joint of thumb)
-const thumbPIP = 3; // Proximal interphalangeal joint (joint closest to fingertip)
-const thumbTIP = 4; // Fingertip
-
-const acceptedOffset = 0.025; // Adjust this value based on testing
-
-// EXTENDED
-export const isIndexUp = (landmarks) => {
-    return landmarks[indexDIP].y < landmarks[indexPIP].y - acceptedOffset;
-};
-
-export const isMiddleUp = (landmarks) => {
-    return landmarks[middleDIP].y < landmarks[middlePIP].y - acceptedOffset;
-};
-
-export const isRingUp = (landmarks) => {
-    return landmarks[ringDIP].y < landmarks[ringPIP].y - acceptedOffset;
-};
-
-export const isPinkyUp = (landmarks) => {
-    return landmarks[pinkyDIP].y < landmarks[pinkyPIP].y - acceptedOffset;
-};
-
-// CURLED
-
-export const isIndexCurled = (landmarks) => {
-    return landmarks[indexDIP].y > landmarks[indexPIP].y + acceptedOffset;
-};
-
-export const isMiddleCurled = (landmarks) => {
-    return landmarks[middleDIP].y > landmarks[middlePIP].y + acceptedOffset;
-};
-
-export const isRingCurled = (landmarks) => {
-    return landmarks[ringDIP].y > landmarks[ringPIP].y + acceptedOffset;
-};
-
-export const isPinkyCurled = (landmarks) => {
-    return landmarks[pinkyDIP].y > landmarks[pinkyPIP].y + acceptedOffset;
-};
-
-// CLAWED
-
-export const isIndexClawed = (landmarks) => {
-    return (landmarks[indexTIP].y > landmarks[indexDIP].y - acceptedOffset);
-};
-
-export const isMiddleClawed = (landmarks) => {
-    return (landmarks[middleTIP].y > landmarks[middleDIP].y - acceptedOffset);
-};
-
-export const isRingClawed = (landmarks) => {
-    return (landmarks[ringTIP].y > landmarks[ringDIP].y - acceptedOffset);
-};
-
-export const isPinkyClawed = (landmarks) => {
-    return (landmarks[pinkyTIP].y > landmarks[pinkyDIP].y - acceptedOffset);
-}
-
-// Helper to calculate distance
 const getDistance = (p1, p2) => {
+    if (!p1 || !p2) return 0;
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2));
 };
 
-//  FINGER SPACING
-export const indexMiddleTogether = (landmarks) => {
-    const indexTip = landmarks[indexTIP];
-    const middleTip = landmarks[middleTIP];
-    const distance = getDistance(indexTip, middleTip);
+// Replace ONLY the getFingerState function inside your signPositions.js file:
+
+export const getFingerState = (landmarks, tipIdx, pipIdx, mcpIdx) => {
+    if (!landmarks || landmarks.length === 0) return "0";
+
+    const wrist = landmarks[0];
     const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    return distance < palmWidth * 0.5; // Adjust threshold based on testing
-};
+    
+    const wristToTip = getDistance(wrist, landmarks[tipIdx]);
+    const wristToMcp = getDistance(wrist, landmarks[mcpIdx]);
+    const extensionDiff = wristToTip - wristToMcp;
 
-export const middleRingTogether = (landmarks) => {
-    const middleTip = landmarks[middleTIP];
-    const ringTip = landmarks[ringTIP];
-    const distance = getDistance(middleTip, ringTip);
-    const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    return distance < palmWidth * 0.5; // Adjust threshold based on testing
-};
+    // Measure internal knuckle straightness alignment
+    const mcpToPip = getDistance(landmarks[mcpIdx], landmarks[pipIdx]);
+    const pipToTip = getDistance(landmarks[pipIdx], landmarks[tipIdx]);
+    const idealStraightDistance = mcpToPip + pipToTip;
+    const actualTipToMcp = getDistance(landmarks[tipIdx], landmarks[mcpIdx]);
+    const straightnessRatio = actualTipToMcp / idealStraightDistance;
 
-export const ringPinkyTogether = (landmarks) => {
-    const ringTip = landmarks[ringTIP];
-    const pinkyTip = landmarks[pinkyTIP];
-    const distance = getDistance(ringTip, pinkyTip);
-    const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    return distance < palmWidth * 0.8; // Adjust threshold based on testing
-};
-
-// THUMB POSITIONS
-
-export const isThumbUp = (landmarks) => {
-    return landmarks[thumbTIP].y < landmarks[thumbMCP].y - acceptedOffset;
-};
-
-export const isThumbOut = (landmarks) => {
-    const thumbTip = landmarks[thumbTIP];
-    const thumbIP = landmarks[thumbPIP];
-    const indexMJoint = landmarks[indexMCP];     // Base of index finger
-    const pinkyKnuckle = landmarks[pinkyMCP]; // Base of pinky
-
-    // Check that the thumb isn't just pointing straight up
-    // If the thumb tip is significantly higher than its IP joint, it's pointing up.
-    const isPointingUp = thumbTip.y < thumbIP.y - 0.025; // tweak threshold if needed
-    if (isPointingUp) {
-        return false; // It's up, not "out" to the side!
+    // 0. DEEP TUCKED FIST (0)
+    if (extensionDiff < -palmWidth * 0.15) {
+        return "0"; // Flat tight fist closure
     }
 
-    // Measure horizontal extension (sideways pull)
-    const thumbDistance = getDistance(thumbTip, pinkyKnuckle);
-    const palmWidth = getDistance(indexMJoint, pinkyKnuckle);
-    const thumbRatio = thumbDistance / palmWidth;
+    // ------------------------------------------------------------------
+    // 🎛️ NEW CALIBRATED NUMERIC CUTOFF BOUNDARIES:
+    // ------------------------------------------------------------------
+    
+    // STRICTLY STRAIGHT (3): Perfectly extended (Like B, D, L, W, Y)
+    if (straightnessRatio > 0.95) return "3"; 
 
-    return thumbRatio > 1.2; // Adjust threshold based on testing
+    // HALF-STRAIGHT / GENTLE BEND (2): Relaxed slope
+    if (straightnessRatio > 0.83) return "2"; 
+
+    // CLAWED / SCRUNCHED / HOOKED (1): Fingertips hover curled high over knuckles (Like E, X)
+    if (straightnessRatio > 0.4) return "1"; 
+
+    // LOCKED CLOSED FIST (0): Default fallback for any tight finger balling
+    return "0"; 
 };
 
-export const isThumbIn = (landmarks) => {
+export const getIndexState  = (landmarks) => getFingerState(landmarks, indexTIP, indexPIP, indexMCP);
+export const getMiddleState = (landmarks) => getFingerState(landmarks, middleTIP, middlePIP, middleMCP);
+export const getRingState   = (landmarks) => getFingerState(landmarks, ringTIP, ringPIP, ringMCP);
+export const getPinkyState  = (landmarks) => getFingerState(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
+
+export const getThumbState = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return "I";
     const thumbTip = landmarks[thumbTIP];
-    const thumbIP = landmarks[thumbPIP];
-    const indexMJoint = landmarks[indexMCP];     // Base of index finger
-    const pinkyKnuckle = landmarks[pinkyMCP]; // Base of pinky
-
-    // Check that the thumb isn't just pointing straight up
-    const isPointingUp = thumbTip.y < thumbIP.y - 0.05; 
-    if (isPointingUp) {
-        return false; // It's up, not "in" towards the palm!
-    }
-
-    // Measure horizontal extension (sideways pull)
+    const pinkyKnuckle = landmarks[pinkyMCP];
+    const indexKnuckle = landmarks[indexMCP];
+    
     const thumbDistance = getDistance(thumbTip, pinkyKnuckle);
-    const palmWidth = getDistance(indexMJoint, pinkyKnuckle);
+    const palmWidth = getDistance(indexKnuckle, pinkyKnuckle);
     const thumbRatio = thumbDistance / palmWidth;
 
-    return thumbRatio < 1.25; // Adjust threshold based on testing
+    // ------------------------------------------------------------------
+    // 🎛️ ADJUST YOUR THUMB CUTOFFS HERE:
+    // ------------------------------------------------------------------
+    
+    // CUTOFF FOR THUMB OUT (O):
+    // Lower this (e.g., to 1.10) if you have to stretch your thumb too far out to register.
+    if (thumbRatio > 1.15) return "O"; 
+    
+    // CUTOFF FOR THUMB UP (T):
+    // Adjust the pixel offset value if your thumb tip has trouble counting as pointing upward.
+    if (landmarks[thumbTIP].y < landmarks[thumbMCP].y - 0.02) return "T"; 
+    
+    // DEFAULT TO THUMB IN (I)
+    return "I"; 
+};
+
+export const getHandRotation = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return lastStableRotation;
+    const indexKnuckle = landmarks[indexMCP];
+    const pinkyKnuckle = landmarks[pinkyMCP];
+    const wrist = landmarks[0];
+
+    const zDepthDifference = indexKnuckle.z - pinkyKnuckle.z;
+    const palmWidth = getDistance(landmarks[5], landmarks[17]);
+    const absoluteZ = Math.abs(zDepthDifference);
+
+    // ------------------------------------------------------------------
+    // 🎛️ ADJUST YOUR PALM TILT CUTOFFS HERE:
+    // ------------------------------------------------------------------
+    
+    // CUTOFF FOR SIDEWAYS PROFILE (HZ):
+    // Lower these multipliers if you have to turn your wrist too aggressively to register a sideways hand.
+    const sidewaysThreshold = lastStableRotation === "HZ" ? palmWidth * 0.28 : palmWidth * 0.38;
+
+    let detectedRotation = "VT";
+    if (absoluteZ > sidewaysThreshold) {
+        detectedRotation = "HZ";
+    } else if (indexKnuckle.z > wrist.z + (palmWidth * 0.05)) {
+        detectedRotation = "IN"; // Inward facing
+    }
+
+    lastStableRotation = detectedRotation;
+    return detectedRotation;
+};
+
+export const getFingerSpacing = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return "T";
+    const palmWidth = getDistance(landmarks[5], landmarks[17]);
+    const indexToMiddleDist = getDistance(landmarks[indexTIP], landmarks[middleTIP]);
+        
+    // CUTOFF FOR APART (A):
+    if (indexToMiddleDist > palmWidth * 0.47) return "A"; 
+    
+    return "T"; // Together (U)
+};
+
+export const isHandClosedO = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    
+    const indexTip = landmarks[8];
+    const thumbTip = landmarks[4];
+    const palmWidth = getDistance(landmarks[5], landmarks[17]);
+    
+    // Squeezed loop threshold: if distance is less than 35% of palm width, they are touching!
+    return getDistance(indexTip, thumbTip) < (palmWidth * 0.35);
 };

@@ -1,35 +1,24 @@
-// Alphabet Recognizer
-import * as alphabetRecognizers from "../signRecognizers/alphabetRecognizer.js";
-const detectSignA = alphabetRecognizers.detectSignA;
-const detectSignB = alphabetRecognizers.detectSignB;
-const detectSignE = alphabetRecognizers.detectSignE;
-const detectSignI = alphabetRecognizers.detectSignI;
-const detectSignL = alphabetRecognizers.detectSignL;
-const detectSignS = alphabetRecognizers.detectSignS;
-const detectSignU = alphabetRecognizers.detectSignU;
-const detectSignV = alphabetRecognizers.detectSignV;
-const detectSignY = alphabetRecognizers.detectSignY;
+// detectAlphabet.js
+import { detectAlphabetSign } from "../signRecognizers/alphabetRecognizer"; 
 
+/**
+ * 🚀 THE UNIVERSAL BRIDGE HOOK
+ * Receives MediaPipe landmarks, checks the flexible array matrix dictionary,
+ * and passes a formatted response directly to your CameraBox front-end UI.
+ */
 export const detectAlphabet = (landmarks) => {
-    if (detectSignA(landmarks)) {
-        return "Detected sign: A";
-    } else if (detectSignB(landmarks)) {
-        return "Detected sign: B";
-    } else if (detectSignE(landmarks)) {
-        return "Detected sign: E";
-    } else if (detectSignI(landmarks)) {
-        return "Detected sign: I";
-    } else if (detectSignL(landmarks)) {
-        return "Detected sign: L";
-    } else if (detectSignS(landmarks)) {
-        return "Detected sign: S";
-    } else if (detectSignU(landmarks)) {
-        return "Detected sign: U";
-    } else if (detectSignV(landmarks)) {
-        return "Detected sign: V";
-    } else if (detectSignY(landmarks)) {
-        return "Detected sign: Y";
-    } else {
+    if (!landmarks || landmarks.length === 0) {
         return "No sign detected";
     }
+
+    // 1. Pass raw landmarks down into your flexible pattern arrays loop
+    const matchedLetter = detectAlphabetSign(landmarks);
+
+    // 2. Safely output the text to your front-end component container display
+    if (matchedLetter) {
+        return `Detected sign: ${matchedLetter}`;
+    }
+
+    return "No sign detected";
 };
+
