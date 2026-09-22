@@ -38,3 +38,7 @@
 - Fixed the A vs E collision bug: Because "A" was accepting partial bends, it was incorrectly processing "E" frames before the engine could read down the line. Tightened "A" to absolute flat fist zeros so "E" does not trigger "A".
 - Added 3D vector tracking for turned hands: Hand rotation inward (`IN`/`HZ`) causes fingers to stack, making them look touching in 2D. Added an option check that lowers the "Apart" spacing threshold whenever the knuckles go perpendicular.
 - Added a check for if the hand is closed to differentiate "O" from "C"
+
+### September 22, 2026
+- Added differentiators for "A", "M", "N", "S", and "T". Still needs a lot of work.
+- added number recognizer (not tested)

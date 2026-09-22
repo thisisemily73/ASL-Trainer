@@ -1,5 +1,6 @@
 // Alphabet Recognizer
 import { detectAlphabet } from "./detectAlphabet.js";
+import { detectNumber } from "./detectNumber.js";
 import { detectFingerPositions } from "./detectFingerPos.js";
 
 export const detectSign = (landmarks) => {

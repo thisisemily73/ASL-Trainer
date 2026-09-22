@@ -8,7 +8,7 @@ const thumbMCP = 2;   const thumbTIP = 4;
 
 let lastStableRotation = "VT";
 
-const getDistance = (p1, p2) => {
+export const getDistance = (p1, p2) => {
     if (!p1 || !p2) return 0;
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2));
 };
@@ -38,7 +38,7 @@ export const getFingerState = (landmarks, tipIdx, pipIdx, mcpIdx) => {
     }
 
     // ------------------------------------------------------------------
-    // 🎛️ NEW CALIBRATED NUMERIC CUTOFF BOUNDARIES:
+    // NEW CALIBRATED NUMERIC CUTOFF BOUNDARIES:
     // ------------------------------------------------------------------
     
     // STRICTLY STRAIGHT (3): Perfectly extended (Like B, D, L, W, Y)
@@ -96,7 +96,7 @@ export const getHandRotation = (landmarks) => {
     const absoluteZ = Math.abs(zDepthDifference);
 
     // ------------------------------------------------------------------
-    // 🎛️ ADJUST YOUR PALM TILT CUTOFFS HERE:
+    // ADJUST PALM TILT CUTOFFS:
     // ------------------------------------------------------------------
     
     // CUTOFF FOR SIDEWAYS PROFILE (HZ):
@@ -123,15 +123,4 @@ export const getFingerSpacing = (landmarks) => {
     if (indexToMiddleDist > palmWidth * 0.47) return "A"; 
     
     return "T"; // Together (U)
-};
-
-export const isHandClosedO = (landmarks) => {
-    if (!landmarks || landmarks.length === 0) return false;
-    
-    const indexTip = landmarks[8];
-    const thumbTip = landmarks[4];
-    const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    
-    // Squeezed loop threshold: if distance is less than 35% of palm width, they are touching!
-    return getDistance(indexTip, thumbTip) < (palmWidth * 0.35);
 };

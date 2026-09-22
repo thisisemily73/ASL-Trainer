@@ -1,5 +1,6 @@
 // alphabetRecognizer.js
 import * as signPositions from '../signRecognizers/signPositions';
+import * as specialPositions from '../signRecognizers/specialPositions'
 
 /**
  * Legend:
@@ -39,7 +40,7 @@ const ALPHABET_SIGN_MATRIX = {
     // --- PROBLEMS --- vv
     "E": {
         fingers: [["0", "1"], ["0", "1"], ["0", "1"], ["0", "1"]],
-        thumb:   ["T"], 
+        thumb:   ["T", "I"], 
         rotation: ["VT", "IN"],
         spacing:  ["T"]
     },
@@ -84,14 +85,14 @@ const ALPHABET_SIGN_MATRIX = {
         fingers: [["0","1"], ["0","1"], ["0","1"], ["0","1"]],
         thumb:   ["I"], // Thumb tucked deep inside over the pinky/ring region
         rotation: ["VT"],
-        spacing:  ["T"]
+        spacing:  ["T", "A"]
     },
     // --- PROBLEM --- vv
     "N": {
         fingers: [["0","1"], ["0","1"], ["0","1"], ["0","1"]],
         thumb:   ["I"], // Thumb tucked under index and middle
         rotation: ["VT"],
-        spacing:  ["T"]
+        spacing:  ["T", "A"]
     },
     "O": {
         fingers: [["1"], ["1"], ["1"], ["1", "2"]],
@@ -129,10 +130,10 @@ const ALPHABET_SIGN_MATRIX = {
     },
     // --- PROBLEM --- vv
     "T": {
-        fingers: [["0","1"], ["0","1"], ["0","1"], ["0","1"]],
-        thumb:   ["I", "T"], // Thumb peeking out between index and middle
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["0","1"], ["0"], ["0"], ["0"]],
+        thumb:   ["O"], // Thumb peeking out between index and middle
+        rotation: ["VT", "IN"],
+        spacing:  ["T", "A"]
     },
     "U": {
         fingers: [["3"], ["3"], ["0","1"], ["0","1"]],
@@ -159,8 +160,8 @@ const ALPHABET_SIGN_MATRIX = {
         spacing:  ["T", "A"]
     },
     "Y": {
-        fingers: [["0","1"], ["0","1"], ["0","1"], ["3"]], // Pinky up
-        thumb:   ["O"], // Strict: Thumb MUST span completely out sideways
+        fingers: [["0","1"], ["0","1"], ["0","1"], ["3"]],
+        thumb:   ["O"], // Strict: Thumb must span completely out sideways
         rotation: ["VT"],
         spacing:  ["T"]
     }
@@ -180,6 +181,12 @@ export const detectAlphabetSign = (landmarks) => {
 
     const liveFingers = [indexS, middleS, ringS, pinkyS];
 
+    // Helper to see if all 4 fingers are down in fist state "0"
+    const isFistState = liveFingers.every(fingerState => fingerState === "0");
+
+    // LOG IN CONSOLE
+    // console.log(`👉 FINGERS: [${liveFingers.join(", ")}] | Thumb: ${thumbS} | Rot: ${rotationS} | Space: ${spacingS}`);
+
     for (const [letter, rules] of Object.entries(ALPHABET_SIGN_MATRIX)) {
         const fingersMatch   = liveFingers.every((fingerState, i) => rules.fingers[i].includes(fingerState));
         const thumbMatches   = rules.thumb.includes(thumbS);
@@ -190,8 +197,20 @@ export const detectAlphabetSign = (landmarks) => {
             
             // O VS C
             if (letter === "C" || letter === "O") {
-                const isClosedCircle = signPositions.isHandClosedO(landmarks);
+                const isClosedCircle = specialPositions.isHandClosedO(landmarks); // (Fixed naming here to stay matched to your file)
                 return isClosedCircle ? "O" : "C"; // Touching means O, wide gap means C!
+            }
+            
+            // 🎯 THE A, M, N, S, T FIST GROUP TIE-BREAKER
+            // If the matrix catches a generic fist block, intercept and delegate by knuckle zones
+            if (isFistState && ["A", "M", "N", "S", "T"].includes(letter)) {
+                const thumbZone = specialPositions.getFistThumbZone(landmarks);
+                
+                if (thumbZone === "EDGE") return "A";
+                if (thumbZone === "INDEX_SLOT") return "T";
+                if (thumbZone === "MIDDLE_SLOT") return "M";
+                if (thumbZone === "RING_SLOT") return "N";
+                if (thumbZone === "FRONT") return "S";
             }
             
             return letter;
