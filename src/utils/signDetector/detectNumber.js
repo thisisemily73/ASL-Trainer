@@ -1,4 +1,4 @@
-// detectAlphabet.js
+// detectNumber.js
 import { detectNumberSign } from "../signRecognizers/numberRecognizer"; 
 
 /**
@@ -19,6 +19,6 @@ export const detectNumber = (landmarks) => {
         return `Detected sign: ${matchedLetter}`;
     }
 
-    return "No sign detected";
+    return null;
 };
 

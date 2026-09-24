@@ -7,6 +7,7 @@ import './styles/Global.css'
 import './styles/pages/Learn.css'
 import './styles/pages/Sandbox.css'
 import './styles/pages/Vocab.css'
+import './styles/pages/Profile.css'
 
 import './styles/components/Topbar.css'
 import './styles/components/VocabWordPage.css'

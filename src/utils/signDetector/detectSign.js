@@ -11,4 +11,7 @@ export const detectSign = (landmarks) => {
     const alphabetResult = detectAlphabet(landmarks);
     if (alphabetResult) return `${alphabetResult}`;
 
+    const numberResult = detectNumber(landmarks);
+    if (numberResult) return `${numberResult}`;
+
 };

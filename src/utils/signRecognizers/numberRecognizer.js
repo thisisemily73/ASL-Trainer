@@ -4,62 +4,88 @@ import * as specialPositions from '../signRecognizers/specialPositions'
 
 // NUMBER SIGN MATRIX
 const NUMBER_SIGN_MATRIX = {
-    "1": {
-        fingers: [["3"], ["0"], ["0"], ["0"]],
-        thumb:   ["T"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+    "CLAWED": {
+        fingers: [["EXTENDED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
-    "2": {
-        fingers: [["3"], ["3"], ["0"], ["0"]],
-        thumb:   ["T"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+    "CURLED": {
+        fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED","CLAWED","CURLED", "EXTENDED"], ["CURLED","EXTENDED"]],
+        thumb: ["OUT"],
+        rotation: [["PALM_OUT", "SIDEWAYS"], ["IA"]],
+        spacing: ["APART", "TOGETHER"]
     },
-    "3": {
-        fingers: [["3"], ["3"], ["0"], ["0"]],
-        thumb:   ["O"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+    "EXTENDED": {
+        fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED"], ["TUCKED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
     "4": {
-        fingers: [["3"], ["3"], ["3"], ["3"]],
-        thumb:   ["T"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
     "5": {
-        fingers: [["3"], ["3"], ["3"], ["3"]],
-        thumb:   ["O"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
     "6": {
-        fingers: [["3"], ["3"], ["3"], ["0"]],
-        thumb:   ["T"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["TUCKED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
     "7": {
-        fingers: [["3"], ["3"], ["1"], ["3"]],
-        thumb:   ["O"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["EXTENDED"], ["EXTENDED"], ["CLAWED"], ["EXTENDED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
     "8": {
-        fingers: [["3"], ["1"], ["3"], ["3"]],
-        thumb:   ["O"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["EXTENDED"], ["CLAWED"], ["EXTENDED"], ["EXTENDED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     },
     "9": {
-        fingers: [["1"], ["3"], ["3"], ["3"]],
-        thumb:   ["O"],
-        rotation: ["VT"],
-        spacing:  ["T"]
+        fingers: [["CLAWED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
+        thumb: ["OUT"],
+        rotation: ["PALM_OUT"],
+        spacing: ["APART"]
     }
 };
 
 export const detectNumberSign = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return null;
+
+    const indexS = signPositions.getIndexState(landmarks);
+    const middleS = signPositions.getMiddleState(landmarks);
+    const ringS = signPositions.getRingState(landmarks);
+    const pinkyS = signPositions.getPinkyState(landmarks);
+    const thumbS = signPositions.getThumbState(landmarks);
+    const rotationS = signPositions.getHandRotation(landmarks);
+    const spacingS = signPositions.getFingerSpacing(landmarks);
+
+    const liveFingers = [indexS, middleS, ringS, pinkyS];
+
+    console.log(`👉 FINGERS: [${liveFingers.join(", ")}] | Thumb: ${thumbS} | Rot: ${rotationS} | Space: ${spacingS}`);
+
+    // Loop through your matrix to find a match
+    for (const [number, data] of Object.entries(NUMBER_SIGN_MATRIX)) {
+        // Check if the live fingers match any allowed pattern for this number
+        const matchesFingers = data.fingers.some(pattern => 
+            pattern.every((val, i) => val === liveFingers[i])
+        );
+
+        if (matchesFingers) {
+            return number; // Returns "CLAWED", "CURLED", "EXTENDED", etc.
+        }
+    }
+
+    return null; // No match found in the matrix
 };

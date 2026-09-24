@@ -42,3 +42,9 @@
 ### September 22, 2026
 - Added differentiators for "A", "M", "N", "S", and "T". Still needs a lot of work.
 - added number recognizer (not tested)
+
+### September 23, 2026
+- Began working on numberRecognizer. "1" has been successfully tested.
+
+### September 24, 2026
+- Rewrote all hand position and orientation states to be more readable.
