@@ -1,37 +1,38 @@
 // numberRecognizer.js
-import * as signPositions from '../signRecognizers/signPositions';
-import * as specialPositions from '../signRecognizers/specialPositions'
+import * as signPositions from './signPositions';
+import * as specialPositions from './specialPositions'
 
 // NUMBER SIGN MATRIX
 const NUMBER_SIGN_MATRIX = {
-    "CLAWED": {
+    "1": {
         fingers: [["EXTENDED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
-        thumb: ["OUT"],
-        rotation: ["PALM_OUT"],
-        spacing: ["APART"]
-    },
-    "CURLED": {
-        fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED","CLAWED","CURLED", "EXTENDED"], ["CURLED","EXTENDED"]],
-        thumb: ["OUT"],
-        rotation: [["PALM_OUT", "SIDEWAYS"], ["IA"]],
+        thumb: ["IN", "PALM_IN"],
+        rotation: ["PALM_IN"],
         spacing: ["APART", "TOGETHER"]
     },
-    "EXTENDED": {
+    "2": {
+        // Index & Middle extended; Ring & Pinky can be tucked or clawed/curled
+        fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED", "CLAWED", "CURLED"], ["TUCKED", "CLAWED", "CURLED"]],
+        thumb: ["IN", "UP"],
+        rotation: ["PALM_IN", "SIDEWAYS"],
+        spacing: ["APART", "TOGETHER"]
+    },
+    "3": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED"], ["TUCKED"]],
-        thumb: ["OUT"],
-        rotation: ["PALM_OUT"],
+        thumb: ["OUT", "UP"],
+        rotation: ["PALM_IN"],
         spacing: ["APART"]
     },
     "4": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
-        thumb: ["OUT"],
-        rotation: ["PALM_OUT"],
+        thumb: ["IN", "PALM_IN"],
+        rotation: ["PALM_IN"],
         spacing: ["APART"]
     },
     "5": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
-        thumb: ["OUT"],
-        rotation: ["PALM_OUT"],
+        thumb: ["OUT", "UP"],
+        rotation: ["PALM_IN", "PALM_OUT"],
         spacing: ["APART"]
     },
     "6": {
@@ -41,19 +42,19 @@ const NUMBER_SIGN_MATRIX = {
         spacing: ["APART"]
     },
     "7": {
-        fingers: [["EXTENDED"], ["EXTENDED"], ["CLAWED"], ["EXTENDED"]],
+        fingers: [["EXTENDED"], ["EXTENDED"], ["CLAWED", "CURLED"], ["EXTENDED"]],
         thumb: ["OUT"],
         rotation: ["PALM_OUT"],
         spacing: ["APART"]
     },
     "8": {
-        fingers: [["EXTENDED"], ["CLAWED"], ["EXTENDED"], ["EXTENDED"]],
+        fingers: [["EXTENDED"], ["CLAWED", "CURLED"], ["EXTENDED"], ["EXTENDED"]],
         thumb: ["OUT"],
         rotation: ["PALM_OUT"],
         spacing: ["APART"]
     },
     "9": {
-        fingers: [["CLAWED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
+        fingers: [["CLAWED", "CURLED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
         thumb: ["OUT"],
         rotation: ["PALM_OUT"],
         spacing: ["APART"]
@@ -75,17 +76,17 @@ export const detectNumberSign = (landmarks) => {
 
     console.log(`👉 FINGERS: [${liveFingers.join(", ")}] | Thumb: ${thumbS} | Rot: ${rotationS} | Space: ${spacingS}`);
 
-    // Loop through your matrix to find a match
-    for (const [number, data] of Object.entries(NUMBER_SIGN_MATRIX)) {
-        // Check if the live fingers match any allowed pattern for this number
-        const matchesFingers = data.fingers.some(pattern => 
-            pattern.every((val, i) => val === liveFingers[i])
-        );
+    // Loop through your matrix using the per-finger check (.every)
+    for (const [number, rules] of Object.entries(NUMBER_SIGN_MATRIX)) {
+        const fingersMatch = liveFingers.every((fingerState, i) => rules.fingers[i].includes(fingerState));
+        const thumbMatches = rules.thumb.includes(thumbS);
+        const rotationMatches = rules.rotation.includes(rotationS);
+        const spacingMatches = rules.spacing.includes(spacingS);
 
-        if (matchesFingers) {
-            return number; // Returns "CLAWED", "CURLED", "EXTENDED", etc.
+        if (fingersMatch && thumbMatches && rotationMatches && spacingMatches) {
+            return number; // Successfully returns the correct number!
         }
     }
 
-    return null; // No match found in the matrix
+    return null; // No match found
 };

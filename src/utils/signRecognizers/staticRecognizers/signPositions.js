@@ -51,7 +51,7 @@ export const getFingerState = (landmarks, tipIdx, pipIdx, mcpIdx) => {
     if (straightnessRatio > 0.4) return "CLAWED"; 
 
     // LOCKED CLOSED FIST (0): Default fallback for any tight finger balling
-    return "0"; 
+    return "TUCKED"; 
 };
 
 export const getIndexState  = (landmarks) => getFingerState(landmarks, indexTIP, indexPIP, indexMCP);
@@ -60,7 +60,7 @@ export const getRingState   = (landmarks) => getFingerState(landmarks, ringTIP, 
 export const getPinkyState  = (landmarks) => getFingerState(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
 
 export const getThumbState = (landmarks) => {
-    if (!landmarks || landmarks.length === 0) return "I";
+    if (!landmarks || landmarks.length === 0) return "IN";
     const thumbTip = landmarks[thumbTIP];
     const pinkyKnuckle = landmarks[pinkyMCP];
     const indexKnuckle = landmarks[indexMCP];
@@ -86,32 +86,34 @@ export const getThumbState = (landmarks) => {
 };
 
 export const getHandRotation = (landmarks) => {
-    if (!landmarks || landmarks.length === 0) return lastStableRotation;
-    const indexKnuckle = landmarks[indexMCP];
-    const pinkyKnuckle = landmarks[pinkyMCP];
+    if (!landmarks || landmarks.length === 0) return "UNKNOWN";
+
+    const indexMCP = landmarks[5];
+    const pinkyMCP = landmarks[17];
     const wrist = landmarks[0];
 
-    const zDepthDifference = indexKnuckle.z - pinkyKnuckle.z;
-    const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    const absoluteZ = Math.abs(zDepthDifference);
-
-    // ------------------------------------------------------------------
-    // ADJUST PALM TILT CUTOFFS:
-    // ------------------------------------------------------------------
+    // Use base knuckles for width instead of fingertips (fingertips change when curled!)
+    const handWidthX = Math.abs(indexMCP.x - pinkyMCP.x);
     
-    // CUTOFF FOR SIDEWAYS PROFILE (HZ):
-    // Lower these multipliers if you have to turn your wrist too aggressively to register a sideways hand.
-    const sidewaysThreshold = lastStableRotation === "HZ" ? palmWidth * 0.28 : palmWidth * 0.38;
-
-    let detectedRotation = "PALM_OUT";
-    if (absoluteZ > sidewaysThreshold) {
-        detectedRotation = "SIDEWAYS";
-    } else if (indexKnuckle.z > wrist.z + (palmWidth * 0.05)) {
-        detectedRotation = "PALM_IN"; // Inward facing
+    // Measure depth difference across the base of the hand
+    const handDepthZ = Math.abs(indexMCP.z - pinkyMCP.z);
+    
+    // If depth difference is large compared to width, the hand is sideways
+    if (handDepthZ > handWidthX * 0.9) {
+        return "SIDEWAYS";
     }
 
-    lastStableRotation = detectedRotation;
-    return detectedRotation;
+    // Compare index vs pinky horizontal position (X-axis) relative to the body
+    const diffX = indexMCP.x - pinkyMCP.x;
+    const THRESHOLD = 0.02;
+
+    if (diffX < -THRESHOLD) {
+        return "PALM_IN";  // Index side is closer to the body
+    } else if (diffX > THRESHOLD) {
+        return "PALM_OUT"; // Pinky side is closer to the body
+    }
+
+    return "SIDEWAYS";
 };
 
 export const getFingerSpacing = (landmarks) => {

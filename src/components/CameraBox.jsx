@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { HandLandmarker, PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
-import * as alphabetRecognizers from '../utils/signRecognizers/alphabetRecognizer';
+// import * as alphabetRecognizers from '../utils/signRecognizers/alphabetRecognizer';
 
 import { detectSign } from '../utils/signDetector/detectSign';
 

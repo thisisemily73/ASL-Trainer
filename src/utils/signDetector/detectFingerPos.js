@@ -1,4 +1,4 @@
-import * as signPositions from '../signRecognizers/signPositions.js';
+import * as signPositions from '../signRecognizers/staticRecognizers/signPositions.js';
 
 export const detectFingerPositions = (landmarks) => {
     // if (signPositions.isIndexUp(landmarks)) {

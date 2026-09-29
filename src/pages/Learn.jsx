@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 
 function Learn() {
   const [activeLesson, setActiveLesson] = useState(null);
-
   const [currentStep, setCurrentStep] = useState('quiz');
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -32,7 +31,7 @@ function Learn() {
         <div className="flex justify-between items-center mb-6">
           <button 
             onClick={() => { setActiveLesson(null); setCurrentStep('quiz'); setSelectedAnswer(null); }}
-            className="text-sm text-indigo-400 hover:underline"
+            className="text-sm text-indigo-400 hover:underline cursor-pointer"
           >
             ← Exit Lesson
           </button>
@@ -61,7 +60,7 @@ function Learn() {
                   <button
                     key={index}
                     onClick={() => handleOptionClick(option)}
-                    className={`p-4 rounded-xl font-semibold border transition-all duration-200 text-center ${btnStyle}`}
+                    className={`p-4 rounded-xl font-semibold border transition-all duration-200 text-center cursor-pointer ${btnStyle}`}
                   >
                     {option}
                   </button>
@@ -87,72 +86,153 @@ function Learn() {
 
   return (
     <div className="page learn-content-grid">
+      {/* Main Lesson Content */}
       <main className="path-main-immersive">
-        <div className="unit-banner">
-          <h2>UNIT 1: FUNDAMENTALS</h2>
+        
+        {/* Unit Banner Card */}
+        <div className="unit-banner-card">
+          <span>UNIT 1</span>
+          <h2>Fundamentals</h2>
+          <div className="flex justify-between items-center text-xs text-slate-500 mb-2" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#64748b', marginBottom: '8px' }}>
+            <span>2/4 lessons</span>
+            <span>50% complete</span>
+          </div>
+          <div style={{ width: '100%', background: '#f1f5f9', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--accent)', height: '100%', width: '50%', borderRadius: '4px' }}></div>
+          </div>
         </div>
 
-        <div className="path-container">
-          <svg className="path-svg" viewBox="0 0 300 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M 90 50 C 90 130, 210 130, 210 210 C 210 300, 90 300, 90 360"
-              stroke="var(--border-color, #CBD5E1)"
-              strokeWidth="6"
-              strokeLinecap="round"
-            />
-          </svg>
-
-          <div className="path-nodes">
-            <div className="node-wrapper node-left completed">
-              <div className="node-circle">A</div>
-              <span className="node-label">ALPHABET PART 1</span>
-              <span className="node-status">✓ COMPLETED</span>
+        {/* Metrics Row */}
+        <div className="metrics-row" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div className="metric-card">
+            <span className="metric-icon">🔥</span>
+            <div>
+              <div className="metric-value">5</div>
+              <div className="metric-label">Day Streak</div>
             </div>
-
-            <div className="node-wrapper node-right completed">
-              <div className="node-circle">5</div>
-              <span className="node-label">NUMBERS 1-10</span>
-              <span className="node-status">✓ COMPLETED</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-icon">⚡</span>
+            <div>
+              <div className="metric-value">90</div>
+              <div className="metric-label">Total XP</div>
             </div>
-
-            <div className="node-wrapper node-left active">
-              <div className="node-circle active-circle">👋</div>
-              <span className="node-label">BASIC GREETINGS</span>
-              <span className="node-status active-text">IN PROGRESS</span>
-              <button 
-                onClick={() => setActiveLesson("greetings")}
-                className="start-btn cursor-pointer"
-              >
-                START LESSON
-              </button>
-            </div>
-
-            <div className="node-wrapper node-right locked">
-              <div className="node-circle">👥</div>
-              <span className="node-label">FAMILY & PEOPLE</span>
-              <span className="node-status">LOCKED</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-icon">✅</span>
+            <div>
+              <div className="metric-value">2</div>
+              <div className="metric-label">Lessons Done</div>
             </div>
           </div>
         </div>
+
+        {/* Vertical Lesson Path Cards */}
+        <div className="lesson-path-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
+          <h3>LESSON PATH</h3>
+
+          {/* Completed Lesson 1 */}
+          <div className="lesson-card">
+            <div className="lesson-card-left">
+              <div className="lesson-icon">✓</div>
+              <div className="lesson-info">
+                <h4>Alphabet Part 1</h4>
+                <p>⏱ 8 min &nbsp;•&nbsp; ⚡ 50 XP &nbsp;•&nbsp; Completed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Completed Lesson 2 */}
+          <div className="lesson-card">
+            <div className="lesson-card-left">
+              <div className="lesson-icon">✓</div>
+              <div className="lesson-info">
+                <h4>Numbers 1-10</h4>
+                <p>⏱ 6 min &nbsp;•&nbsp; ⚡ 40 XP &nbsp;•&nbsp; Completed</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Active Lesson */}
+          <div className="lesson-card active-lesson">
+            <div className="lesson-card-left">
+              <div className="lesson-icon active-icon">👋</div>
+              <div className="lesson-info">
+                <h4>Basic Greetings</h4>
+                <p>⏱ 10 min &nbsp;•&nbsp; ⚡ 60 XP &nbsp;•&nbsp; In Progress</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setActiveLesson("greetings")}
+              className="start-btn"
+            >
+              Start →
+            </button>
+          </div>
+
+          {/* Locked Lesson */}
+          <div className="lesson-card locked-lesson">
+            <div className="lesson-card-left">
+              <div className="lesson-icon locked-icon">🔒</div>
+              <div className="lesson-info">
+                <h4>Alphabet Part 2</h4>
+                <p>⏱ 9 min &nbsp;•&nbsp; ⚡ 50 XP &nbsp;•&nbsp; Locked</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </main>
 
+      {/* Sidebar */}
       <aside className="learn-sidebar-minimal">
-        <div className="sidebar-group">
+        {/* Goals Group */}
+        <div className="sidebar-card">
           <h3>MY GOALS</h3>
-          <label className="goal-item checked">
-            <input type="checkbox" defaultChecked /> Learn 5 Signs Today
-          </label>
-          <label className="goal-item">
-            <input type="checkbox" /> Practice 15 Mins
-          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <label className="goal-item">
+              <input type="checkbox" defaultChecked style={{ width: '16px', height: '16px' }} />
+              <span style={{ textDecoration: 'line-through', opacity: 0.6 }}>Learn 5 Signs Today</span>
+            </label>
+            <label className="goal-item">
+              <input type="checkbox" style={{ width: '16px', height: '16px' }} />
+              <span>Practice 15 Mins</span>
+            </label>
+            <label className="goal-item">
+              <input type="checkbox" style={{ width: '16px', height: '16px' }} />
+              <span>Complete Unit 1</span>
+            </label>
+          </div>
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '4px' }}>
+              <span>1/3 goals</span>
+              <span>33%</span>
+            </div>
+            <div style={{ width: '100%', background: '#f1f5f9', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--accent)', height: '100%', width: '33%', borderRadius: '3px' }}></div>
+            </div>
+          </div>
         </div>
 
-        <div className="sidebar-group culture-spotlight-minimal">
+        {/* Culture Spotlight */}
+        <div className="sidebar-card">
           <h3>DEAF CULTURE SPOTLIGHT</h3>
-          <div className="culture-banner-text">
-            <span>💙 Turquoise & Navy</span>
+          <div className="culture-tag">
+            💙 Turquoise & Navy
           </div>
-          <p>Why Turquoise and Navy Blue were chosen for ASL pride and community representation.</p>
+          <p>
+            Why Turquoise and Navy Blue were chosen for ASL pride and community representation.
+          </p>
+          <a href="#read" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>Read more →</a>
+        </div>
+
+        {/* Up Next Card */}
+        <div className="sidebar-card-dark">
+          <span>UP NEXT</span>
+          <h4>Unit 2: Expressions</h4>
+          <p>
+            Facial grammar, emotions, and conversational flow.
+          </p>
         </div>
       </aside>
     </div>

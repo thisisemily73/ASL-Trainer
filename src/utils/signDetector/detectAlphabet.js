@@ -1,24 +1,38 @@
 // detectAlphabet.js
-import { detectAlphabetSign } from "../signRecognizers/alphabetRecognizer"; 
+import { detectStaticAlphabetSign } from "../signRecognizers/staticRecognizers/staticAlphabet"; 
+import { updateLandmarkHistory, detectDynamicAlphabet } from '../signRecognizers/dynamicRecognizers/dynamicAlphabet';
 
-/**
- * THE UNIVERSAL BRIDGE HOOK
- * Receives MediaPipe landmarks, checks the flexible array matrix dictionary,
- * and passes a formatted response directly to your CameraBox front-end UI.
- */
+// Keep track of the last time a dynamic sign was detected to prevent flickering
+let lastDynamicTime = 0;
+const DYNAMIC_LOCKOUT_MS = 600; // Lock out static signs for 0.6 seconds after a dynamic motion
+
 export const detectAlphabet = (landmarks) => {
     if (!landmarks || landmarks.length === 0) {
         return null;
     }
 
-    // 1. Pass raw landmarks down into your flexible pattern arrays loop
-    const matchedLetter = detectAlphabetSign(landmarks);
+    // 1. Always update history
+    updateLandmarkHistory(landmarks);
 
-    // 2. Safely output the text to your front-end component container display
-    if (matchedLetter) {
-        return `Detected sign: ${matchedLetter}`;
+    const now = Date.now();
+
+    // 2. Check dynamic signs
+    const matchedDynamicLetter = detectDynamicAlphabet(landmarks);
+    if (matchedDynamicLetter) {
+        lastDynamicTime = now; // Reset the lockout timer
+        return `Detected sign: ${matchedDynamicLetter}`;
+    }
+
+    // 3. If we are still within the lockout window after a dynamic motion, skip static checks
+    if (now - lastDynamicTime < DYNAMIC_LOCKOUT_MS) {
+        return null; // Or return the last active dynamic letter to keep it stable
+    }
+
+    // 4. Fall back to static alphabet signs
+    const matchedStaticLetter = detectStaticAlphabetSign(landmarks);
+    if (matchedStaticLetter) {
+        return `Detected sign: ${matchedStaticLetter}`;
     }
 
     return null;
 };
-

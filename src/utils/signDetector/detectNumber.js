@@ -1,5 +1,5 @@
 // detectNumber.js
-import { detectNumberSign } from "../signRecognizers/numberRecognizer"; 
+import { detectNumberSign } from "../signRecognizers/staticRecognizers/numberRecognizer"; 
 
 /**
  * 🚀 THE UNIVERSAL BRIDGE HOOK

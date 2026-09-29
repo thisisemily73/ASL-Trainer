@@ -1,6 +1,6 @@
 // alphabetRecognizer.js
-import * as signPositions from '../signRecognizers/signPositions';
-import * as specialPositions from '../signRecognizers/specialPositions'
+import * as signPositions from './signPositions';
+import * as specialPositions from './specialPositions'
 
 /**
  * Legend:
@@ -167,7 +167,7 @@ const ALPHABET_SIGN_MATRIX = {
     }
 };
 
-export const detectAlphabetSign = (landmarks) => {
+export const detectStaticAlphabetSign = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return null;
 
     // ... (Keep your live state variable bindings exactly as they are here) ...
