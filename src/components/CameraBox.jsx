@@ -1,7 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { HandLandmarker, PoseLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
-// import * as alphabetRecognizers from '../utils/signRecognizers/alphabetRecognizer';
-
 import { detectSign } from '../utils/signDetector/detectSign';
 
 function CameraBox({
@@ -9,6 +7,7 @@ function CameraBox({
     title = "LIVE ASL SANDBOX",
     onStreamToggle,
     onSignDetected,
+    onSignSubmitted, // <-- ADDED PROP HERE
     renderCanvas
 }) {
     const videoRef = useRef(null);
@@ -21,7 +20,14 @@ function CameraBox({
 
     const [isCameraActive, setIsCameraActive] = useState(false);
     const frameHistoryRef = useRef([]);
-    const lastSentSignRef = useRef(''); // <-- ADD THIS LINE HERE
+    const lastSentSignRef = useRef('');
+
+    const missingHandFramesRef = useRef(0);
+    const sessionSignHistoryRef = useRef([]);
+
+    const isRecordingRef = useRef(false);
+    const sessionFramesRef = useRef([]);
+
 
     useEffect(() => {
         async function setupLandmarkers() {
@@ -61,8 +67,6 @@ function CameraBox({
         };
     }, []);
 
-
-    // Safely attach the media stream when the camera turns active
     useEffect(() => {
         if (isCameraActive && videoRef.current && mediaStreamRef.current) {
             videoRef.current.srcObject = mediaStreamRef.current;
@@ -102,14 +106,103 @@ function CameraBox({
         if (onSignDetected) onSignDetected('Camera paused', 0);
     };
 
+    // --- HELPER TO PROCESS AND SUBMIT WHEN HANDS DROP ---
+    const triggerSignSubmission = () => {
+        const history = sessionSignHistoryRef.current;
+        if (history.length === 0) return;
+
+        const signCounts = {};
+        history.forEach(item => {
+            signCounts[item.sign] = (signCounts[item.sign] || 0) + 1;
+        });
+
+        const sortedSigns = Object.entries(signCounts).sort((a, b) => b[1] - a[1]);
+
+        if (sortedSigns.length > 0) {
+            const topSign = sortedSigns[0][0];
+            const topMatchPercent = Math.min(98, 75 + (sortedSigns[0][1] * 2));
+
+            const alternatives = sortedSigns.slice(1, 3).map(([sign], idx) => ({
+                word: sign,
+                match: Math.max(40, topMatchPercent - (15 * (idx + 1)))
+            }));
+
+            if (onSignSubmitted) {
+                onSignSubmitted({ word: topSign, match: topMatchPercent }, alternatives);
+            }
+        }
+
+        // Reset session buffer
+        sessionSignHistoryRef.current = [];
+    };
+
     // Continuous Loop Function
+    const processRecordedSession = (frames) => {
+        // If we have enough frames, slice off the last 5-8 frames 
+        // to ignore the hand-dropping motion at the very end!
+        const trimmedFrames = frames.length > 8 ? frames.slice(0, -6) : frames;
+
+        if (trimmedFrames.length === 0) return;
+
+        const hasMovement = checkSessionMotion(trimmedFrames);
+
+        const signCounts = {};
+        trimmedFrames.forEach(item => {
+            if ((item.sign === 'J' || item.sign === 'Z') && !hasMovement) {
+                return; // Skip if it's a static sign masquerading as motion
+            }
+            signCounts[item.sign] = (signCounts[item.sign] || 0) + 1;
+        });
+
+        const sortedSigns = Object.entries(signCounts).sort((a, b) => b[1] - a[1]);
+
+        if (sortedSigns.length > 0) {
+            const topSign = sortedSigns[0][0];
+            const matchCount = sortedSigns[0][1];
+            const topMatchPercent = Math.min(98, Math.max(60, Math.round((matchCount / trimmedFrames.length) * 100)));
+
+            const alternatives = sortedSigns.slice(1, 3).map(([sign], idx) => ({
+                word: sign,
+                match: Math.max(40, topMatchPercent - (15 * (idx + 1)))
+            }));
+
+            if (onSignSubmitted) {
+                onSignSubmitted({ word: topSign, match: topMatchPercent }, alternatives);
+            }
+        }
+    };
+
+    const checkSessionMotion = (frames) => {
+        // We need enough frames to evaluate continuous movement
+        if (frames.length < 10) return false;
+
+        // Slice off the first few frames (settling in) and last few frames (dropping out)
+        // to look ONLY at the active middle of the gesture!
+        const coreFrames = frames.slice(4, -6);
+        if (coreFrames.length < 5) return false;
+
+        let totalDistance = 0;
+        for (let i = 1; i < coreFrames.length; i++) {
+            const prev = coreFrames[i - 1].landmarks;
+            const curr = coreFrames[i].landmarks;
+
+            // Track index finger tip (landmark 8) movement in the middle of the gesture
+            const dist = Math.sqrt(
+                Math.pow(curr[8].x - prev[8].x, 2) +
+                Math.pow(curr[8].y - prev[8].y, 2)
+            );
+            totalDistance += dist;
+        }
+
+        return totalDistance > 0.4; // Tune this threshold if needed
+    };
+
     const predictWebcam = () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
 
         if (!video || !canvas || !handLandmarkerRef.current || !poseLandmarkerRef.current) return;
 
-        // Ensure video is actively playing before processing frame
         if (video.readyState >= 2 && !video.paused && !video.ended) {
             let startTimeMs = performance.now();
             const ctx = canvas.getContext('2d');
@@ -125,123 +218,74 @@ function CameraBox({
             ctx.save();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            let hasBodyOrHand = false;
-            let resultMessage = 'No body/hands detected';
+            let resultMessage = 'Show hand to camera to begin...';
             let confidenceScore = 0;
 
             if (handResults.landmarks && handResults.landmarks.length > 0) {
-                hasBodyOrHand = true;
+                // HANDS ARE PRESENT: Reset drop counter
+                missingHandFramesRef.current = 0;
                 const currentHand = handResults.landmarks[0];
 
-                // DETECT SIGN LOGIC
-                const detected = detectSign(currentHand);
-                // console.log("Detected sign:", detected);
-
-                // If your detectSign function found a letter
-                if (detected && !detected.includes("Unknown") && !detected.includes("No sign")) {
-                    resultMessage = detected;
-                    confidenceScore = 95;
-                } else {
-                    resultMessage = 'Hand Detected (Hold pose...)';
-                    confidenceScore = 60;
+                // If we weren't recording yet, START recording session now!
+                if (!isRecordingRef.current) {
+                    isRecordingRef.current = true;
+                    sessionFramesRef.current = [];
                 }
 
-                const flattenedCoordinates = currentHand.flatMap(lm => [lm.x, lm.y, lm.z]);
-                frameHistoryRef.current.push(flattenedCoordinates);
-                if (frameHistoryRef.current.length > 30) {
-                    frameHistoryRef.current.shift();
+                // Run detection on the current frame
+                const detected = detectSign(currentHand);
+
+                if (detected && !detected.includes("Unknown") && !detected.includes("No sign")) {
+                    // Save this frame's detection into our session buffer
+                    sessionFramesRef.current.push({ sign: detected, landmarks: currentHand });
+                    resultMessage = `Recording gesture... (${sessionFramesRef.current.length} frames)`;
+                    confidenceScore = 85;
+                } else {
+                    resultMessage = 'Holding pose (Keep steady)...';
+                    confidenceScore = 50;
                 }
 
                 for (const landmarks of handResults.landmarks) {
                     drawHandSkeleton(ctx, landmarks, canvas.width, canvas.height);
                 }
-            } else if (poseResults.landmarks && poseResults.landmarks.length > 0) {
-                hasBodyOrHand = true;
-                resultMessage = 'Body Tracked (Show your hand)';
-                confidenceScore = 40;
+            } else {
+                // HANDS ARE GONE (Potential drop)
+                if (isRecordingRef.current) {
+                    missingHandFramesRef.current += 1;
+                    resultMessage = 'Hand dropped! Analyzing...';
+                    confidenceScore = 0;
 
-                for (const landmarks of poseResults.landmarks) {
-                    drawPoseSkeleton(ctx, landmarks, canvas.width, canvas.height);
+                    // If hands stay out of frame for ~12 frames (~400ms), finish the session and analyze!
+                    if (missingHandFramesRef.current >= 12) {
+                        isRecordingRef.current = false;
+                        processRecordedSession(sessionFramesRef.current);
+                        sessionFramesRef.current = [];
+                    }
+                } else {
+                    if (poseResults.landmarks && poseResults.landmarks.length > 0) {
+                        resultMessage = 'Body Tracked (Raise your hand)';
+                        confidenceScore = 30;
+                        for (const landmarks of poseResults.landmarks) {
+                            drawPoseSkeleton(ctx, landmarks, canvas.width, canvas.height);
+                        }
+                    }
                 }
             }
 
-            // Send the final calculated message up to Sandbox ONLY IF IT CHANGES
             if (onSignDetected && resultMessage !== lastSentSignRef.current) {
                 lastSentSignRef.current = resultMessage;
                 onSignDetected(resultMessage, confidenceScore);
             }
 
             ctx.restore();
-
         }
 
-        // Keep the loop alive seamlessly
         requestRef.current = requestAnimationFrame(predictWebcam);
     };
 
-    const drawPoseSkeleton = (ctx, landmarks, width, height) => {
-        const POSE_CONNECTIONS = [
-            [11, 12],
-            [11, 13], [13, 15],
-            [12, 14], [14, 16],
-            [11, 23], [12, 24],
-            [23, 24]
-        ];
-
-        ctx.strokeStyle = "rgba(27, 42, 74, 0.6)"; // Navy blue for limbs
-        ctx.lineWidth = 3;
-
-        for (const [i, j] of POSE_CONNECTIONS) {
-            const p1 = landmarks[i];
-            const p2 = landmarks[j];
-            // Lowered visibility threshold slightly to catch upper body easier
-            if (p1 && p2 && (p1.visibility > 0.3 && p2.visibility > 0.3)) {
-                ctx.beginPath();
-                ctx.moveTo(p1.x * width, p1.y * height);
-                ctx.lineTo(p2.x * width, p2.y * height);
-                ctx.stroke();
-            }
-        }
-
-        for (let i = 11; i <= 16; i++) {
-            const landmark = landmarks[i];
-            if (landmark && landmark.visibility > 0.3) {
-                ctx.fillStyle = "#00A8A8"; // Turquoise joints
-                ctx.beginPath();
-                ctx.arc(landmark.x * width, landmark.y * height, 5, 0, 2 * Math.PI);
-                ctx.fill();
-            }
-        }
-    };
-
-    const drawHandSkeleton = (ctx, landmarks, width, height) => {
-        const HAND_CONNECTIONS = [
-            [0, 1], [1, 2], [2, 3], [3, 4],
-            [0, 5], [5, 6], [6, 7], [7, 8],
-            [5, 9], [9, 10], [10, 11], [11, 12],
-            [9, 13], [13, 14], [14, 15], [15, 16],
-            [13, 17], [17, 18], [18, 19], [19, 20],
-            [0, 17]
-        ];
-
-        ctx.strokeStyle = "#1B2A4A";
-        ctx.lineWidth = 3;
-        for (const [i, j] of HAND_CONNECTIONS) {
-            const p1 = landmarks[i];
-            const p2 = landmarks[j];
-            ctx.beginPath();
-            ctx.moveTo(p1.x * width, p1.y * height);
-            ctx.lineTo(p2.x * width, p2.y * height);
-            ctx.stroke();
-        }
-
-        for (const landmark of landmarks) {
-            ctx.fillStyle = "#00A8A8";
-            ctx.beginPath();
-            ctx.arc(landmark.x * width, landmark.y * height, 5, 0, 2 * Math.PI);
-            ctx.fill();
-        }
-    };
+    // ... Keep your drawPoseSkeleton and drawHandSkeleton functions unchanged ...
+    const drawPoseSkeleton = (ctx, landmarks, width, height) => { /* ... */ };
+    const drawHandSkeleton = (ctx, landmarks, width, height) => { /* ... */ };
 
     return (
         <div className="camera-feed-card">

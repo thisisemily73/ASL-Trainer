@@ -16,7 +16,7 @@ export const detectNumber = (landmarks) => {
 
     // 2. Safely output the text to your front-end component container display
     if (matchedLetter) {
-        return `Detected sign: ${matchedLetter}`;
+        return `${matchedLetter}`;
     }
 
     return null;

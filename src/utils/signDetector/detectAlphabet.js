@@ -20,7 +20,7 @@ export const detectAlphabet = (landmarks) => {
     const matchedDynamicLetter = detectDynamicAlphabet(landmarks);
     if (matchedDynamicLetter) {
         lastDynamicTime = now; // Reset the lockout timer
-        return `Detected sign: ${matchedDynamicLetter}`;
+        return `${matchedDynamicLetter}`;
     }
 
     // 3. If we are still within the lockout window after a dynamic motion, skip static checks
@@ -31,7 +31,7 @@ export const detectAlphabet = (landmarks) => {
     // 4. Fall back to static alphabet signs
     const matchedStaticLetter = detectStaticAlphabetSign(landmarks);
     if (matchedStaticLetter) {
-        return `Detected sign: ${matchedStaticLetter}`;
+        return `${matchedStaticLetter}`;
     }
 
     return null;

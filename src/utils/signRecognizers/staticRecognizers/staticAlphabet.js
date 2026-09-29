@@ -62,7 +62,7 @@ const ALPHABET_SIGN_MATRIX = {
         rotation: ["PALM_OUT"],
         spacing:  ["TOGETHER", "APART"] // Index and Middle stacked together
     },
-    "PALM_IN": {
+    "I": {
         fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["EXTENDED"]], // Strictly pinky up
         thumb:   ["UP"],
         rotation: ["PALM_OUT", "PALM_IN"],
@@ -94,7 +94,7 @@ const ALPHABET_SIGN_MATRIX = {
         rotation: ["PALM_OUT"],
         spacing:  ["TOGETHER", "APART"]
     },
-    "OUT": {
+    "O": {
         fingers: [["CLAWED"], ["CLAWED"], ["CLAWED"], ["CLAWED", "CURLED"]],
         thumb:   ["OUT"], // Curved hand forming a closed loop shape
         rotation: ["SIDEWAYS"],
@@ -129,7 +129,7 @@ const ALPHABET_SIGN_MATRIX = {
         spacing:  ["TOGETHER"]
     },
     // --- PROBLEM --- vv
-    "UP": {
+    "T": {
         fingers: [["TUCKED","CLAWED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
         thumb:   ["OUT"], // Thumb peeking out between index and middle
         rotation: ["PALM_OUT", "PALM_IN"],

@@ -48,3 +48,6 @@
 
 ### September 24, 2026
 - Rewrote all hand position and orientation states to be more readable.
+
+### September 29, 2026
+- Restructured Sandbox to detect signs when both hands leave the frame.

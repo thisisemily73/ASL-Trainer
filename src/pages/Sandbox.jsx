@@ -1,59 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CameraBox from '../components/CameraBox';
 
 function Sandbox() {
-    const [recognizedSign, setRecognizedSign] = useState('Show your hand to the camera');
-    const [confidence, setConfidence] = useState(0);
+    const [recentSigns, setRecentSigns] = useState([]);
+    const [submittedResult, setSubmittedResult] = useState(null); // { word, match, alternatives }
+
+    // Listen for Spacebar to dismiss the result and continue
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.code === 'Space' && submittedResult) {
+                setSubmittedResult(null); // Clear result to resume live tracking
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [submittedResult]);
 
     return (
-        <div className="page sandbox-container">
-            <div className="sandbox-header">
-                <h2>LIVE ASL SANDBOX</h2>
-                <p>Test your handshapes in real-time. MediaPipe tracks 21 distinct 3D hand landmarks.</p>
-            </div>
-
-            <div className="sandbox-workspace">
-                {/* Modular Camera Component passing sign updates up to Sandbox */}
+        <div className="sandbox-workspace">
+            {/* LEFT COLUMN: Camera Box */}
+            <div className="sandbox-left-column">
                 <CameraBox
+                    height="100%"
                     title=""
-                    onSignDetected={(sign, conf) => {
-                        setRecognizedSign(sign);
-                        setConfidence(conf);
+                    onSignSubmitted={(topResult, alternatives) => {
+                        // When hand drops, lock in the result for the right-hand box!
+                        setSubmittedResult({
+                            ...topResult,
+                            alternatives
+                        });
+                        // Add to recent signs history
+                        setRecentSigns(prev => [topResult.word, ...prev.slice(0, 4)]);
                     }}
                 />
+            </div>
 
-                {/* Real-Time Interpretation Output Panel */}
-                <div className="interpretation-panel">
-                    {/* ... rest of your panel code ... */}
+            {/* RIGHT COLUMN */}
+            <div className="sandbox-right-column" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                
+                {/* LIVE RECOGNITION BOX */}
+                <div className="live-recognition-card" style={{ padding: '20px', background: 'var(--container)', borderRadius: '20px', border: '2px dashed var(--primary)' }}>
+                    <h3 style={{ color: 'var(--primary)', marginTop: 0 }}>LIVE RECOGNITION</h3>
 
-                    {/* Real-Time Interpretation Output Panel */}
-                    <div className="interpretation-panel">
-                        <h3>LIVE RECOGNITION</h3>
-                        <div className="output-display-box">
-                            <span className="interpreted-sign-text">{recognizedSign}</span>
+                    {submittedResult ? (
+                        /* --- TRANSFORMED STATE: Show Detected Sign & Alternatives --- */
+                        <div 
+                            style={{ textAlign: 'center', padding: '15px 0', cursor: 'pointer' }}
+                            onClick={() => setSubmittedResult(null)}
+                        >
+                            <p style={{ fontSize: '0.8rem', letterSpacing: '2px', color: 'var(--primary)', fontWeight: 700, margin: 0 }}>
+                                DETECTED SIGN
+                            </p>
+                            <h1 style={{ fontSize: '4rem', margin: '5px 0', color: 'var(--text-main)' }}>
+                                {submittedResult.word}
+                            </h1>
+                            <p style={{ fontSize: '0.9rem', color: '#64748B', marginBottom: '15px' }}>
+                                {submittedResult.match}% Match
+                            </p>
+
+                            {submittedResult.alternatives && submittedResult.alternatives.length > 0 && (
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '15px', fontSize: '0.85rem', color: '#64748B' }}>
+                                    <span>Other possibilities:</span>
+                                    {submittedResult.alternatives.map((alt, i) => (
+                                        <span key={i} style={{ background: 'rgba(0,0,0,0.05)', padding: '2px 8px', borderRadius: '4px' }}>
+                                            {alt.word} ({alt.match}%)
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            <p>
+                                Try another sign!
+                            </p>
                         </div>
+                    ) : (
+                        /* --- NORMAL LIVE STATE: Waiting or recording --- */
+                        <div style={{ textAlign: 'center', padding: '30px 0', color: '#64748B' }}>
+                            <p style={{ fontSize: '1.1rem', fontWeight: 500 }}>Show hand to camera to begin...</p>
+                        </div>
+                    )}
+                </div>
 
-                        <div className="confidence-meter-group">
-                            <label>Tracking Accuracy Match</label>
-                            <div className="progress-bar-bg">
-                                <div
-                                    className="progress-bar-fill"
-                                    style={{ width: `${confidence}%` }}
-                                ></div>
+                {/* SIGN DICTIONARY BOX */}
+                {/* dictionary component */}
+
+                {/* RECENTLY SIGNED BOX */}
+                <div className="recent-signs-card" style={{ padding: '20px', background: 'var(--container)', borderRadius: '20px' }}>
+                    <h3 style={{ color: 'var(--primary)', marginTop: 0 }}>🕒 Recently Signed</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                        {recentSigns.map((sign, index) => (
+                            <div key={index} style={{ padding: '10px 15px', background: 'rgba(0,0,0,0.03)', borderRadius: '8px', fontWeight: 600 }}>
+                                {sign}
                             </div>
-                            <span className="confidence-value">{confidence}%</span>
-                        </div>
-
-                        <div className="sandbox-tips">
-                            <h4>💡 MediaPipe Sandbox Tips</h4>
-                            <ul>
-                                <li>Make sure your entire hand fits inside the camera view.</li>
-                                <li>Bright front-lighting helps the model track all 21 hand joints accurately.</li>
-                                <li>Joints render in <strong>Turquoise</strong> and lines render in <strong>Navy Blue</strong>!</li>
-                            </ul>
-                        </div>
+                        ))}
                     </div>
                 </div>
+
             </div>
         </div>
     );
