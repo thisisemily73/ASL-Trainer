@@ -51,3 +51,4 @@
 
 ### September 29, 2026
 - Restructured Sandbox to detect signs when both hands leave the frame.
+- Added tabs to lesson path (prologue, unit 1).
