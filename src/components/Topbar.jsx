@@ -2,7 +2,7 @@ function Topbar() {
     return (
         <header className="topbar">
             <div className="topbar-left">
-                <a href="/" className="logo">ASL Hand Trainer</a>
+                <a href="/" className="logo">ASLearn</a>
             </div>
             <div className="topbar-right">
 

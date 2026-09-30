@@ -52,3 +52,8 @@
 ### September 29, 2026
 - Restructured Sandbox to detect signs when both hands leave the frame.
 - Added tabs to lesson path (prologue, unit 1).
+
+### September 30, 2026
+- Began making hypothetical avatar scripts for incoming mascots
+- Created concept ideas for 2 app mascots
+- Renamed "ASL Web Trainer" to "ASLearn"
