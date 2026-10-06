@@ -6,58 +6,34 @@ const ringMCP = 13;   const ringPIP = 14;   const ringTIP = 16;
 const pinkyMCP = 17;  const pinkyPIP = 18;  const pinkyTIP = 20;
 const thumbMCP = 2;   const thumbTIP = 4;
 
-let lastStableRotation = "VT";
-
 export const getDistance = (p1, p2) => {
     if (!p1 || !p2) return 0;
     return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2) + Math.pow(p2.z - p1.z, 2));
 };
 
-// Replace ONLY the getFingerState function inside your signPositions.js file:
+/**
+ * Returns a continuous value from 0.0 (fully straight/extended) to 1.0 (fully tucked/curled).
+ */
+export const getFingerCurlFactor = (landmarks, tipIdx, pipIdx, mcpIdx) => {
+    if (!landmarks || landmarks.length === 0) return 1.0;
 
-export const getFingerState = (landmarks, tipIdx, pipIdx, mcpIdx) => {
-    if (!landmarks || landmarks.length === 0) return "TUCKED";
-
-    const wrist = landmarks[0];
-    const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    
-    const wristToTip = getDistance(wrist, landmarks[tipIdx]);
-    const wristToMcp = getDistance(wrist, landmarks[mcpIdx]);
-    const extensionDiff = wristToTip - wristToMcp;
-
-    // Measure internal knuckle straightness alignment
     const mcpToPip = getDistance(landmarks[mcpIdx], landmarks[pipIdx]);
     const pipToTip = getDistance(landmarks[pipIdx], landmarks[tipIdx]);
     const idealStraightDistance = mcpToPip + pipToTip;
     const actualTipToMcp = getDistance(landmarks[tipIdx], landmarks[mcpIdx]);
-    const straightnessRatio = actualTipToMcp / idealStraightDistance;
-
-    // 0. DEEP TUCKED FIST (0)
-    if (extensionDiff < -palmWidth * 0.15) {
-        return "TUCKED"; // Flat tight fist closure
-    }
-
-    // ------------------------------------------------------------------
-    // NEW CALIBRATED NUMERIC CUTOFF BOUNDARIES:
-    // ------------------------------------------------------------------
     
-    // STRICTLY STRAIGHT (3): Perfectly extended (Like B, D, L, W, Y)
-    if (straightnessRatio > 0.95) return "EXTENDED"; 
-
-    // HALF-STRAIGHT / GENTLE BEND (2): Relaxed slope
-    if (straightnessRatio > 0.83) return "CURLED"; 
-
-    // CLAWED / SCRUNCHED / HOOKED (1): Fingertips hover curled high over knuckles (Like E, X)
-    if (straightnessRatio > 0.4) return "CLAWED"; 
-
-    // LOCKED CLOSED FIST (0): Default fallback for any tight finger balling
-    return "TUCKED"; 
+    const straightnessRatio = actualTipToMcp / idealStraightDistance;
+    
+    // Clamp between 0.0 and 1.0
+    const curlFactor = Math.max(0, Math.min(1, 1 - straightnessRatio));
+    return curlFactor;
 };
 
-export const getIndexState  = (landmarks) => getFingerState(landmarks, indexTIP, indexPIP, indexMCP);
-export const getMiddleState = (landmarks) => getFingerState(landmarks, middleTIP, middlePIP, middleMCP);
-export const getRingState   = (landmarks) => getFingerState(landmarks, ringTIP, ringPIP, ringMCP);
-export const getPinkyState  = (landmarks) => getFingerState(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
+// Expose individual finger curl factors (0.0 = straight, 1.0 = curled)
+export const getIndexCurl  = (landmarks) => getFingerCurlFactor(landmarks, indexTIP, indexPIP, indexMCP);
+export const getMiddleCurl = (landmarks) => getFingerCurlFactor(landmarks, middleTIP, middlePIP, middleMCP);
+export const getRingCurl   = (landmarks) => getFingerCurlFactor(landmarks, ringTIP, ringPIP, ringMCP);
+export const getPinkyCurl  = (landmarks) => getFingerCurlFactor(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
 
 export const getThumbState = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return "IN";
@@ -69,19 +45,9 @@ export const getThumbState = (landmarks) => {
     const palmWidth = getDistance(indexKnuckle, pinkyKnuckle);
     const thumbRatio = thumbDistance / palmWidth;
 
-    // ------------------------------------------------------------------
-    // ADJUST THUMB CUTOFFS:
-    // ------------------------------------------------------------------
-    
-    // CUTOFF FOR THUMB OUT (O):
-    // Lower this (e.g., to 1.10) if you have to stretch your thumb too far out to register.
     if (thumbRatio > 1.15) return "OUT"; 
-    
-    // CUTOFF FOR THUMB UP (T):
-    // Adjust the pixel offset value if your thumb tip has trouble counting as pointing upward.
     if (landmarks[thumbTIP].y < landmarks[thumbMCP].y - 0.02) return "UP"; 
     
-    // DEFAULT TO THUMB IN (I)
     return "IN"; 
 };
 
@@ -90,27 +56,21 @@ export const getHandRotation = (landmarks) => {
 
     const indexMCP = landmarks[5];
     const pinkyMCP = landmarks[17];
-    const wrist = landmarks[0];
 
-    // Use base knuckles for width instead of fingertips (fingertips change when curled!)
     const handWidthX = Math.abs(indexMCP.x - pinkyMCP.x);
-    
-    // Measure depth difference across the base of the hand
     const handDepthZ = Math.abs(indexMCP.z - pinkyMCP.z);
     
-    // If depth difference is large compared to width, the hand is sideways
     if (handDepthZ > handWidthX * 0.9) {
         return "SIDEWAYS";
     }
 
-    // Compare index vs pinky horizontal position (X-axis) relative to the body
     const diffX = indexMCP.x - pinkyMCP.x;
     const THRESHOLD = 0.02;
 
     if (diffX < -THRESHOLD) {
-        return "PALM_IN";  // Index side is closer to the body
+        return "PALM_IN";  
     } else if (diffX > THRESHOLD) {
-        return "PALM_OUT"; // Pinky side is closer to the body
+        return "PALM_OUT"; 
     }
 
     return "SIDEWAYS";
@@ -121,10 +81,9 @@ export const getFingerSpacing = (landmarks) => {
     const palmWidth = getDistance(landmarks[5], landmarks[17]);
     const indexToMiddleDist = getDistance(landmarks[indexTIP], landmarks[middleTIP]);
         
-    // CUTOFF FOR APART (A):
     if (indexToMiddleDist > palmWidth * 0.47) return "APART"; 
     
-    return "TOGETHER"; // Together (U)
+    return "TOGETHER"; 
 };
 
 export const getHandOrientationY = (landmarks) => {
@@ -132,16 +91,10 @@ export const getHandOrientationY = (landmarks) => {
     
     const indexKnuckle = landmarks[indexMCP];
     const pinkyKnuckle = landmarks[pinkyMCP];
-    
-    // In screen coordinates, smaller Y values are higher up on the screen.
     const diffY = indexKnuckle.y - pinkyKnuckle.y; 
 
-    // If index knuckle is significantly higher than pinky knuckle
     if (diffY < -0.04) return "INDEX_ABOVE";
-    
-    // If index knuckle is significantly lower
     if (diffY > 0.04) return "INDEX_BELOW";
     
-    // Otherwise, they are roughly level/parallel
-    return "P";
+    return "PARALLEL";
 };

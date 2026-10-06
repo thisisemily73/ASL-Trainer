@@ -9,7 +9,7 @@ import * as specialPositions from './specialPositions'
  * Rotation: "PALM_OUT"=Vertical (Palm facing out), "SIDEWAYS"=Horizontal (Hand turned on side), "PALM_IN"=Inward (Palm facing body)
  * Spacing:  "UP"=Together, "A"=Apart
  */
-const ALPHABET_SIGN_MATRIX = {
+export const ALPHABET_SIGN_MATRIX = {
     "A": {
         fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]], // Strict: no "CLAWED" (clawed) allowed here!
         thumb:   ["OUT", "UP"],

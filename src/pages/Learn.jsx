@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { lessonPath } from '../data/lessons/lessonPath';
+import { AvatarCanvas } from '../components/AvatarCanvas';
 
 function Learn() {
   const [activeUnitKey, setActiveUnitKey] = useState('prologue');
@@ -19,9 +20,9 @@ function Learn() {
 
   const handleSelectUnit = (unitKey) => {
     const targetUnit = lessonPath[unitKey];
-    
+
     // If you want to lock units dynamically if they aren't prologue or unit-1:
-    const isLocked = unitKey !== 'prologue' && unitKey !== 'unit-1'; 
+    const isLocked = unitKey !== 'prologue' && unitKey !== 'unit-1';
 
     if (isLocked) {
       setLockedPreviewUnit({ ...targetUnit, id: unitKey });
@@ -84,14 +85,14 @@ function Learn() {
             <p className="text-slate-300 text-base leading-relaxed py-4">{currentConcept.description}</p>
           </div>
           <div className="flex justify-between mt-6">
-            <button 
+            <button
               disabled={theoryIndex === 0}
               onClick={() => setTheoryIndex(prev => prev - 1)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold ${theoryIndex === 0 ? 'opacity-40 cursor-not-allowed bg-slate-800' : 'bg-slate-800 hover:bg-slate-700 cursor-pointer'}`}
             >
               ← Previous
             </button>
-            <button 
+            <button
               onClick={() => {
                 if (isLastConcept) setActiveLesson(null);
                 else setTheoryIndex(prev => prev + 1);
@@ -119,8 +120,14 @@ function Learn() {
         {currentStep === 'quiz' && currentSign ? (
           <div className="space-y-6">
             <div className="bg-slate-800 p-8 rounded-xl text-center border border-slate-700">
-              <div className="h-40 flex items-center justify-center bg-slate-900/50 rounded-lg mb-4 border border-dashed border-slate-700">
-                <span className="text-slate-400">[ Diagram for "{currentSign.word}" ]</span>
+              <div className="h-48 flex items-center justify-center bg-slate-950 rounded-xl mb-4 border border-slate-700 overflow-hidden relative">
+                {/* Show the 3D hand as the visual prompt for what sign to find */}
+                <div className="w-full h-full scale-75 pointer-events-none">
+                  <AvatarCanvas currentSign={currentSign?.word} />
+                </div>
+                <div className="absolute bottom-2 left-3 bg-slate-900/80 px-3 py-1 rounded-md text-xs font-semibold text-teal-400 border border-slate-800">
+                  Target: {currentSign.word}
+                </div>
               </div>
               <h2 className="text-xl font-bold mb-2">What is the correct sign?</h2>
               <p className="text-sm text-slate-400">{currentSign.hint}</p>
@@ -144,12 +151,15 @@ function Learn() {
             <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
               <h2 className="text-xl font-bold mb-2">Now, try signing: {currentSign?.word}!</h2>
               <p className="text-sm text-slate-400 mb-4">{currentSign?.hint}</p>
-              <div className="h-64 bg-black rounded-lg flex flex-col items-center justify-center border border-slate-700 relative overflow-hidden p-4">
-                <span className="text-slate-500 text-sm mb-4">[ Camera Feed Active ]</span>
-                <button onClick={handleWebcamSuccess} className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-sm cursor-pointer">
-                  Simulate Successful Sign →
-                </button>
+
+              {/* Clean container for your 3D canvas */}
+              <div className="mb-4">
+                <AvatarCanvas currentSign={currentSign?.word} />
               </div>
+
+              <button onClick={handleWebcamSuccess} className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-sm cursor-pointer">
+                Simulate Successful Sign →
+              </button>
             </div>
           </div>
         )}
@@ -159,7 +169,7 @@ function Learn() {
 
   return (
     <div className="page learn-content-grid relative">
-      
+
       {/* Locked Unit Preview Modal */}
       {lockedPreviewUnit && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -184,14 +194,14 @@ function Learn() {
 
       {/* Main Lesson Content */}
       <main className="path-main-immersive">
-        
+
         {/* Unit Banner Card */}
         <div className="unit-banner-card flex flex-col gap-3 relative">
           <div className="flex justify-between items-center">
             <span style={{ color: '#0d9488', fontWeight: '800', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
               {unit.title}
             </span>
-            <button 
+            <button
               onClick={() => setShowUnitSelector(!showUnitSelector)}
               className="unit-selector-btn ml-auto"
             >
@@ -235,7 +245,7 @@ function Learn() {
             <span>{unit.lessons.length} lessons in this unit</span>
             <span>Ready</span>
           </div>
-          
+
           <div style={{ width: '100%', background: '#ccfbf1', height: '8px', borderRadius: '4px', overflow: 'hidden', marginTop: '4px' }}>
             <div style={{ background: '#0d9488', height: '100%', width: activeUnitKey === 'prologue' ? '100%' : '35%', borderRadius: '4px' }}></div>
           </div>
@@ -251,8 +261,8 @@ function Learn() {
             const isLocked = lesson.status === 'locked';
 
             return (
-              <div 
-                key={lesson.id} 
+              <div
+                key={lesson.id}
                 className={`lesson-card ${isActive ? 'active-lesson' : ''} ${isLocked ? 'locked-lesson' : ''}`}
               >
                 <div className="lesson-card-left">
