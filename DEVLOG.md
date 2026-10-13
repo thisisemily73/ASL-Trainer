@@ -51,9 +51,19 @@
 
 ### September 29, 2026
 - Restructured Sandbox to detect signs when both hands leave the frame.
-- Added tabs to lesson path (prologue, unit 1).
+- Added tabs to lesson path (prologue, unit 1).111
 
 ### September 30, 2026
 - Began making hypothetical avatar scripts for incoming mascots
 - Created concept ideas for 2 app mascots
 - Renamed "ASL Web Trainer" to "ASLearn"
+
+### October 5, 2026
+- Added 3D hand model (from Sketchfab)
+- Began coding 3D hand to form proper signs
+
+### October 12, 2026
+- Added custom hand model (from blender, rigged) 
+
+### October 13, 2026
+- Calibrated the letter 'a' using rotate on the axes
