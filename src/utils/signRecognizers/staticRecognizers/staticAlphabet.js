@@ -4,24 +4,24 @@ import * as specialPositions from './specialPositions'
 
 /**
  * Legend:
- * Fingers:  "CURLED"=Straight, "CLAWED"=Curved/Bent, "TUCKED"=Closed/Curled Fist
+ * Fingers:  "CURLED"=Slight Bend, "CLAWED"=Curved/Bent, "TUCKED"=Closed/Curled Fist, "EXTENDED"=straight
  * Thumb:    "UP"=Up (Over front), "OUT"=Out (To the side), "PALM_IN"=In (Tucked inside/across palm)
  * Rotation: "PALM_OUT"=Vertical (Palm facing out), "SIDEWAYS"=Horizontal (Hand turned on side), "PALM_IN"=Inward (Palm facing body)
- * Spacing:  "UP"=Together, "A"=Apart
+ * Spacing:  "TOGETHER"=Together, "APART"=Apart
  */
 export const ALPHABET_SIGN_MATRIX = {
     "A": {
-        fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]], // Strict: no "CLAWED" (clawed) allowed here!
+        fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
         thumb:   ["OUT", "UP"],
         rotation: ["PALM_IN", "PALM_OUT"],
-        spacing:  ["TOGETHER"]
+        spacing:  [["TOGETHER"], ["TOGETHER"], ["TOGETHER"]]
     },
     // B: All fingers strictly extended straight up ("EXTENDED").
     "B": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
-        thumb:   ["UP", "PALM_IN"],
+        thumb:   ["IN", "UP"],
         rotation: ["PALM_OUT"],
-        spacing:  ["TOGETHER"]
+        spacing: [["TOGETHER"], ["TOGETHER"], ["TOGETHER"]]
     },
     // C: Fingers relaxed or curved ("CURLED" or "CLAWED"). Hand sideways.
     "C": {
@@ -34,13 +34,13 @@ export const ALPHABET_SIGN_MATRIX = {
         fingers: [["EXTENDED"], ["CLAWED"], ["CLAWED"], ["CLAWED", "CURLED"]],
         thumb:   ["UP", "OUT"], // Thumb touches curled middle fingertips
         rotation: ["SIDEWAYS"],
-        spacing:  ["APART"]
+        spacing:  [["APART", "TOGETHER"], ["TOGETHER", "APART"], ["TOGETHER"], ["TOGETHER"]]
     },
     // E: Fingers MUST be clawed/scrunched up high ("CLAWED"). Thumb is up up-front ("UP").
     // --- PROBLEMS --- vv
     "E": {
         fingers: [["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"]],
-        thumb:   ["UP", "PALM_IN"], 
+        thumb:   ["UP", "IN"], 
         rotation: ["PALM_OUT", "PALM_IN"],
         spacing:  ["TOGETHER"]
     },
@@ -52,7 +52,7 @@ export const ALPHABET_SIGN_MATRIX = {
     },
     "G": {
         fingers: [["EXTENDED"], ["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"], ["TUCKED","CLAWED"]], // Index out horizontal
-        thumb:   ["PALM_IN"], // Thumb pointing out parallel to index
+        thumb:   ["IN"], // Thumb pointing out parallel to index
         rotation: ["PALM_OUT"],
         spacing:  ["APART"]
     },
@@ -216,6 +216,32 @@ export const detectStaticAlphabetSign = (landmarks) => {
             return letter;
         }
     }
+
+    let spacingMatches = true;
+        const spacingRule = rules.spacing;
+
+        if (Array.isArray(spacingRule) && spacingRule.length === 3) {
+            const [imState, mrState, rpState] = spacingRule;
+
+            const isIMTogether = signPositions.isIndexAndMiddleTogether(landmarks);
+            const isMRTogether = signPositions.isMiddleAndRingTogether(landmarks);
+            const isRPTogether = signPositions.isRingAndPinkyTogether(landmarks);
+
+            const actualIM = isIMTogether ? "TOGETHER" : "APART";
+            const actualMR = isMRTogether ? "TOGETHER" : "APART";
+            const actualRP = isRPTogether ? "TOGETHER" : "APART";
+
+            // Support both array wrappers like [["TOGETHER"]] and clean strings like ["TOGETHER"]
+            const imAllowed = Array.isArray(imState) ? imState : [imState];
+            const mrAllowed = Array.isArray(mrState) ? mrState : [mrState];
+            const rpAllowed = Array.isArray(rpState) ? rpState : [rpState];
+
+            const imMatch = imAllowed.includes(actualIM);
+            const mrMatch = mrAllowed.includes(actualMR);
+            const rpMatch = rpAllowed.includes(actualRP);
+
+            spacingMatches = imMatch && mrMatch && rpMatch;
+        }
 
     return null;
 };

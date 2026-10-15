@@ -92,7 +92,21 @@ export const lessonPath = {
             correctAnswer: "Thank You"
           }
         ]
-      }
+      },
+      {
+        id: "avatar-sandbox",
+        label: "3D HAND AVATAR TESTER",
+        status: "active",
+        type: "practice",
+        icon: "🤖",
+        signs: [
+          { word: "A", hint: "Fist with thumb on side of index finger", options: ["A", "B", "C", "D"], correctAnswer: "A" },
+          { word: "B", hint: "Flat hand with thumb tucked across palm", options: ["A", "B", "C", "D"], correctAnswer: "B" },
+          { word: "C", hint: "Curved hand forming a C shape", options: ["B", "C", "D", "E"], correctAnswer: "C" },
+          { word: "D", hint: "Index finger up, others touching thumb", options: ["A", "C", "D", "E"], correctAnswer: "D" },
+          { word: "E", hint: "Fingers curled down, thumb tucked in", options: ["B", "C", "D", "E"], correctAnswer: "E" }
+        ]
+      },
     ]
   }
 };

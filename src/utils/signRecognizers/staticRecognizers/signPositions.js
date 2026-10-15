@@ -35,6 +35,21 @@ export const getMiddleCurl = (landmarks) => getFingerCurlFactor(landmarks, middl
 export const getRingCurl   = (landmarks) => getFingerCurlFactor(landmarks, ringTIP, ringPIP, ringMCP);
 export const getPinkyCurl  = (landmarks) => getFingerCurlFactor(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
 
+// RESTORED FINGER STATE HELPERS (REQUIRED FOR RECOGNIZER)
+
+export const getFingerStateFromCurl = (curl) => {
+    if (curl < 0.3) return "EXTENDED";
+    if (curl < 0.55) return "CURLED";
+    return "TUCKED";
+};
+
+export const getIndexState  = (landmarks) => getFingerStateFromCurl(getIndexCurl(landmarks));
+export const getMiddleState = (landmarks) => getFingerStateFromCurl(getMiddleCurl(landmarks));
+export const getRingState   = (landmarks) => getFingerStateFromCurl(getRingCurl(landmarks));
+export const getPinkyState  = (landmarks) => getFingerStateFromCurl(getPinkyCurl(landmarks));
+
+// ORIGINAL SPATIAL & ROTATION HELPERS
+
 export const getThumbState = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return "IN";
     const thumbTip = landmarks[thumbTIP];
@@ -54,17 +69,17 @@ export const getThumbState = (landmarks) => {
 export const getHandRotation = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return "UNKNOWN";
 
-    const indexMCP = landmarks[5];
-    const pinkyMCP = landmarks[17];
+    const indexMCPCoord = landmarks[5];
+    const pinkyMCPCoord = landmarks[17];
 
-    const handWidthX = Math.abs(indexMCP.x - pinkyMCP.x);
-    const handDepthZ = Math.abs(indexMCP.z - pinkyMCP.z);
+    const handWidthX = Math.abs(indexMCPCoord.x - pinkyMCPCoord.x);
+    const handDepthZ = Math.abs(indexMCPCoord.z - pinkyMCPCoord.z);
     
     if (handDepthZ > handWidthX * 0.9) {
         return "SIDEWAYS";
     }
 
-    const diffX = indexMCP.x - pinkyMCP.x;
+    const diffX = indexMCPCoord.x - pinkyMCPCoord.x;
     const THRESHOLD = 0.02;
 
     if (diffX < -THRESHOLD) {
@@ -76,14 +91,30 @@ export const getHandRotation = (landmarks) => {
     return "SIDEWAYS";
 };
 
-export const getFingerSpacing = (landmarks) => {
-    if (!landmarks || landmarks.length === 0) return "TOGETHER";
-    const palmWidth = getDistance(landmarks[5], landmarks[17]);
-    const indexToMiddleDist = getDistance(landmarks[indexTIP], landmarks[middleTIP]);
-        
-    if (indexToMiddleDist > palmWidth * 0.47) return "APART"; 
-    
-    return "TOGETHER"; 
+export const isIndexAndMiddleTogether = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const palmWidth = getDistance(landmarks[indexMCP], landmarks[pinkyMCP]);
+    return getDistance(landmarks[indexTIP], landmarks[middleTIP]) < palmWidth * 0.35;
+};
+
+export const isMiddleAndRingTogether = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const palmWidth = getDistance(landmarks[indexMCP], landmarks[pinkyMCP]);
+    return getDistance(landmarks[middleTIP], landmarks[ringTIP]) < palmWidth * 0.35;
+};
+
+export const isRingAndPinkyTogether = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const palmWidth = getDistance(landmarks[indexMCP], landmarks[pinkyMCP]);
+    return getDistance(landmarks[ringTIP], landmarks[pinkyTIP]) < palmWidth * 0.35;
+};
+
+// Aggregate check for all 4 fingers being held together
+export const areAllFingersTogether = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    return isIndexAndMiddleTogether(landmarks) && 
+           isMiddleAndRingTogether(landmarks) && 
+           isRingAndPinkyTogether(landmarks);
 };
 
 export const getHandOrientationY = (landmarks) => {
@@ -97,4 +128,61 @@ export const getHandOrientationY = (landmarks) => {
     if (diffY > 0.04) return "INDEX_BELOW";
     
     return "PARALLEL";
+};
+
+// DESCRIPTIVE POSITIONAL & CONTACT HELPERS
+
+const TOUCH_THRESHOLD = 0.045; // Proximity limit for touch detection
+
+export const thumbTouchingIndex = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    return getDistance(landmarks[thumbTIP], landmarks[indexTIP]) < TOUCH_THRESHOLD || 
+           getDistance(landmarks[thumbTIP], landmarks[indexPIP]) < TOUCH_THRESHOLD;
+};
+
+export const thumbTouchingMiddle = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    return getDistance(landmarks[thumbTIP], landmarks[middleTIP]) < TOUCH_THRESHOLD;
+};
+
+export const thumbTouchingRing = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    return getDistance(landmarks[thumbTIP], landmarks[ringTIP]) < TOUCH_THRESHOLD;
+};
+
+export const thumbTouchingPinky = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    return getDistance(landmarks[thumbTIP], landmarks[pinkyTIP]) < TOUCH_THRESHOLD;
+};
+
+export const thumbTuckedInFront = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const palmCenter = landmarks[middleMCP];
+    return getDistance(landmarks[thumbTIP], palmCenter) < 0.09 && landmarks[thumbTIP].z < palmCenter.z;
+};
+
+export const thumbTuckedUnder = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    return landmarks[thumbTIP].y > landmarks[indexPIP].y;
+};
+
+export const isThumbBetweenIndexAndMiddle = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const thumbX = landmarks[thumbTIP].x;
+    return thumbX > Math.min(landmarks[indexMCP].x, landmarks[middleMCP].x) && 
+           thumbX < Math.max(landmarks[indexMCP].x, landmarks[middleMCP].x);
+};
+
+export const isThumbBetweenMiddleAndRing = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const thumbX = landmarks[thumbTIP].x;
+    return thumbX > Math.min(landmarks[middleMCP].x, landmarks[ringMCP].x) && 
+           thumbX < Math.max(landmarks[middleMCP].x, landmarks[ringMCP].x);
+};
+
+export const isThumbBetweenRingAndPinky = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) return false;
+    const thumbX = landmarks[thumbTIP].x;
+    return thumbX > Math.min(landmarks[ringMCP].x, landmarks[pinkyMCP].x) && 
+           thumbX < Math.max(landmarks[ringMCP].x, landmarks[pinkyMCP].x);
 };

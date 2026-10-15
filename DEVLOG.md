@@ -67,3 +67,6 @@
 
 ### October 13, 2026
 - Calibrated the letter 'a' using rotate on the axes
+
+### October 16, 2026
+- Began adding and testing rules for 3d model hand and finger positions. Successfully tested some alphabet signs (a, b)
