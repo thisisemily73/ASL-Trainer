@@ -1,6 +1,15 @@
+
 import React, { useState } from 'react';
 import { lessonPath } from '../data/lessons/lessonPath';
 import { AvatarCanvas } from '../components/AvatarCanvas';
+
+const UNLOCKED_UNITS = new Set(['prologue', 'unit-1']);
+
+const INITIAL_GOALS = [
+  { id: 'signs', label: 'Learn 5 Signs Today' },
+  { id: 'practice', label: 'Practice 15 Mins' },
+  { id: 'unit', label: 'Complete Unit 1' },
+];
 
 function Learn() {
   const [activeUnitKey, setActiveUnitKey] = useState('prologue');
@@ -8,32 +17,92 @@ function Learn() {
   const [lockedPreviewUnit, setLockedPreviewUnit] = useState(null);
 
   const [activeLesson, setActiveLesson] = useState(null);
+  const [completedLessons, setCompletedLessons] = useState(() =>
+    Object.entries(lessonPath).flatMap(([unitKey, unit]) =>
+      (unit.lessons || [])
+        .filter(lesson => lesson.status === 'completed')
+        .map(lesson => `${unitKey}:${lesson.id}`)
+    )
+  );
+
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
   const [theoryIndex, setTheoryIndex] = useState(0);
   const [currentStep, setCurrentStep] = useState('quiz');
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
+  const [completedGoals, setCompletedGoals] = useState(['signs']);
 
   const unit = lessonPath[activeUnitKey];
-  const lessonData = unit?.lessons.find(l => l.id === activeLesson);
+  const lessons = unit?.lessons || [];
+
+  const lessonData = lessons.find(lesson => lesson.id === activeLesson);
   const currentSign = lessonData?.signs?.[currentSignIndex] || null;
 
-  const handleSelectUnit = (unitKey) => {
-    const targetUnit = lessonPath[unitKey];
+  const lessonKey = (unitKey, lessonId) => `${unitKey}:${lessonId}`;
 
-    // If you want to lock units dynamically if they aren't prologue or unit-1:
-    const isLocked = unitKey !== 'prologue' && unitKey !== 'unit-1';
+  const isLessonCompleted = (unitKey, lessonId) =>
+    completedLessons.includes(lessonKey(unitKey, lessonId));
 
-    if (isLocked) {
-      setLockedPreviewUnit({ ...targetUnit, id: unitKey });
-    } else if (targetUnit) {
-      setActiveUnitKey(unitKey);
-      setShowUnitSelector(false);
-      setActiveLesson(null);
+  const getLessonState = (lesson, index) => {
+    if (isLessonCompleted(activeUnitKey, lesson.id)) {
+      return 'completed';
     }
+
+    // Lessons unlock in order, after the previous lesson is completed.
+    const previousLesson = lessons[index - 1];
+
+    if (
+      index === 0 ||
+      (previousLesson &&
+        isLessonCompleted(activeUnitKey, previousLesson.id))
+    ) {
+      return 'available';
+    }
+
+    return 'locked';
   };
 
-  const handleStartLesson = (lessonId) => {
+  const completedCount = lessons.filter(lesson =>
+    isLessonCompleted(activeUnitKey, lesson.id)
+  ).length;
+
+  const unitProgress = lessons.length
+    ? Math.round((completedCount / lessons.length) * 100)
+    : 0;
+
+  const finishLesson = () => {
+    if (!activeLesson) return;
+
+    const key = lessonKey(activeUnitKey, activeLesson);
+
+    setCompletedLessons(previous =>
+      previous.includes(key) ? previous : [...previous, key]
+    );
+
+    setActiveLesson(null);
+    setCurrentSignIndex(0);
+    setTheoryIndex(0);
+    setCurrentStep('quiz');
+    setSelectedAnswer(null);
+    setIsCorrect(false);
+  };
+
+  const handleSelectUnit = unitKey => {
+    const targetUnit = lessonPath[unitKey];
+
+    if (!targetUnit) return;
+
+    if (!UNLOCKED_UNITS.has(unitKey)) {
+      setLockedPreviewUnit({ ...targetUnit, id: unitKey });
+      return;
+    }
+
+    setActiveUnitKey(unitKey);
+    setActiveLesson(null);
+    setShowUnitSelector(false);
+  };
+
+  const handleStartLesson = lessonId => {
     setActiveLesson(lessonId);
     setCurrentSignIndex(0);
     setTheoryIndex(0);
@@ -42,301 +111,512 @@ function Learn() {
     setIsCorrect(false);
   };
 
-  const handleOptionClick = (option) => {
+  const handleExitLesson = () => {
+    setActiveLesson(null);
+    setCurrentSignIndex(0);
+    setTheoryIndex(0);
+    setCurrentStep('quiz');
+    setSelectedAnswer(null);
+    setIsCorrect(false);
+  };
+
+  const handleOptionClick = option => {
+    if (!currentSign || isCorrect) return;
+
     setSelectedAnswer(option);
-    if (option === currentSign.correctAnswer) {
-      setIsCorrect(true);
-      setTimeout(() => {
-        setSelectedAnswer(null);
-        setIsCorrect(false);
-        setCurrentStep('webcam');
-      }, 1000);
-    } else {
-      setIsCorrect(false);
-    }
+    setIsCorrect(option === currentSign.correctAnswer);
   };
 
-  const handleWebcamSuccess = () => {
-    if (lessonData.signs && currentSignIndex < lessonData.signs.length - 1) {
-      setCurrentSignIndex(prev => prev + 1);
+  const handleContinueToPractice = () => {
+    if (!isCorrect) return;
+
+    setSelectedAnswer(null);
+    setIsCorrect(false);
+    setCurrentStep('practice');
+  };
+
+  const handlePracticeComplete = () => {
+    if (!lessonData?.signs?.length) {
+      finishLesson();
+      return;
+    }
+
+    if (currentSignIndex < lessonData.signs.length - 1) {
+      setCurrentSignIndex(index => index + 1);
       setCurrentStep('quiz');
+      setSelectedAnswer(null);
+      setIsCorrect(false);
     } else {
-      setActiveLesson(null);
+      finishLesson();
     }
   };
 
-  if (activeLesson && lessonData) {
-    if (lessonData.type === 'theory') {
-      const currentConcept = lessonData.content[theoryIndex];
-      const isLastConcept = theoryIndex === lessonData.content.length - 1;
+  const toggleGoal = goalId => {
+    setCompletedGoals(previous =>
+      previous.includes(goalId)
+        ? previous.filter(id => id !== goalId)
+        : [...previous, goalId]
+    );
+  };
 
-      return (
-        <div className="max-w-xl mx-auto p-6 bg-slate-900 text-white rounded-2xl shadow-xl mt-10">
-          <div className="flex justify-between items-center mb-6">
-            <button onClick={() => setActiveLesson(null)} className="text-sm text-indigo-400 hover:underline cursor-pointer">
-              ← Exit Lesson
-            </button>
-            <span className="text-sm bg-indigo-600 px-3 py-1 rounded-full font-medium">
-              {lessonData.label} • Concept {theoryIndex + 1}/{lessonData.content.length}
-            </span>
-          </div>
-          <div className="bg-slate-800 p-8 rounded-xl space-y-4 border border-slate-700 text-center">
-            <h2 className="text-2xl font-bold text-indigo-300">{currentConcept.title}</h2>
-            <p className="text-slate-300 text-base leading-relaxed py-4">{currentConcept.description}</p>
-          </div>
-          <div className="flex justify-between mt-6">
-            <button
-              disabled={theoryIndex === 0}
-              onClick={() => setTheoryIndex(prev => prev - 1)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold ${theoryIndex === 0 ? 'opacity-40 cursor-not-allowed bg-slate-800' : 'bg-slate-800 hover:bg-slate-700 cursor-pointer'}`}
-            >
-              ← Previous
-            </button>
-            <button
-              onClick={() => {
-                if (isLastConcept) setActiveLesson(null);
-                else setTheoryIndex(prev => prev + 1);
-              }}
-              className="bg-indigo-600 hover:bg-indigo-500 px-6 py-2 rounded-lg text-sm font-semibold cursor-pointer"
-            >
-              {isLastConcept ? 'Complete Lesson ✓' : 'Next Concept →'}
-            </button>
-          </div>
-        </div>
-      );
-    }
+  // Lesson screen
+  if (activeLesson && lessonData) {
+    const concepts = lessonData.content || [];
+    const currentConcept = concepts[theoryIndex];
+    const isTheory = lessonData.type === 'theory';
+    const isLastConcept = theoryIndex >= concepts.length - 1;
 
     return (
-      <div className="max-w-xl mx-auto p-6 bg-slate-900 text-white rounded-2xl shadow-xl mt-10">
-        <div className="flex justify-between items-center mb-6">
-          <button onClick={() => setActiveLesson(null)} className="text-sm text-indigo-400 hover:underline cursor-pointer">
-            ← Exit Lesson
-          </button>
-          <span className="text-sm bg-indigo-600 px-3 py-1 rounded-full font-medium">
-            {lessonData.label} • {currentStep === 'quiz' ? `Sign ${currentSignIndex + 1}/${lessonData.signs.length} (Quiz)` : 'Live Practice'}
-          </span>
-        </div>
+      <div className="learn-lesson-page">
+        <div className="learn-lesson-shell">
+          <header className="learn-lesson-header">
+            <button
+              type="button"
+              onClick={handleExitLesson}
+              className="learn-text-button"
+            >
+              ← Exit lesson
+            </button>
 
-        {currentStep === 'quiz' && currentSign ? (
-          <div className="space-y-6">
-            <div className="bg-slate-800 p-8 rounded-xl text-center border border-slate-700">
-              <div className="h-48 flex items-center justify-center bg-slate-950 rounded-xl mb-4 border border-slate-700 overflow-hidden relative">
-                {/* Show the 3D hand as the visual prompt for what sign to find */}
-                <div className="w-full h-full scale-75 pointer-events-none">
-                  <AvatarCanvas currentSign={currentSign?.word} />
-                </div>
-                <div className="absolute bottom-2 left-3 bg-slate-900/80 px-3 py-1 rounded-md text-xs font-semibold text-teal-400 border border-slate-800">
-                  Target: {currentSign.word}
-                </div>
-              </div>
-              <h2 className="text-xl font-bold mb-2">What is the correct sign?</h2>
-              <p className="text-sm text-slate-400">{currentSign.hint}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {currentSign.options.map((option, index) => {
-                let btnStyle = "bg-slate-800 hover:bg-slate-700 border-slate-700 text-white";
-                if (selectedAnswer === option) {
-                  btnStyle = isCorrect ? "bg-emerald-600 border-emerald-500 text-white" : "bg-rose-600 border-rose-500 text-white";
-                }
-                return (
-                  <button key={index} onClick={() => handleOptionClick(option)} className={`p-4 rounded-xl font-semibold border transition-all duration-200 text-center cursor-pointer ${btnStyle}`}>
-                    {option}
+            <span className="learn-lesson-counter">
+              {lessonData.label}
+              {isTheory
+                ? ` · ${concepts.length ? theoryIndex + 1 : 0}/${concepts.length}`
+                : ` · ${currentSign ? currentSignIndex + 1 : 0}/${lessonData.signs?.length || 0}`}
+            </span>
+          </header>
+
+          {isTheory ? (
+            <section className="learn-activity-card">
+              {currentConcept ? (
+                <>
+                  <p className="learn-eyebrow">LEARN</p>
+                  <h2>{currentConcept.title}</h2>
+                  <p className="learn-concept-description">
+                    {currentConcept.description}
+                  </p>
+
+                  <div className="learn-lesson-actions">
+                    <button
+                      type="button"
+                      className="learn-secondary-button"
+                      disabled={theoryIndex === 0}
+                      onClick={() =>
+                        setTheoryIndex(index => Math.max(0, index - 1))
+                      }
+                    >
+                      ← Previous
+                    </button>
+
+                    <button
+                      type="button"
+                      className="learn-primary-button"
+                      onClick={() => {
+                        if (isLastConcept) {
+                          finishLesson();
+                        } else {
+                          setTheoryIndex(index => index + 1);
+                        }
+                      }}
+                    >
+                      {isLastConcept ? 'Complete lesson' : 'Next concept →'}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2>This lesson has no content yet.</h2>
+                  <p>
+                    Add concepts to this lesson in your lesson data before
+                    completing it.
+                  </p>
+                  <button
+                    type="button"
+                    className="learn-secondary-button"
+                    onClick={handleExitLesson}
+                  >
+                    Back to lessons
                   </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6 text-center">
-            <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-              <h2 className="text-xl font-bold mb-2">Now, try signing: {currentSign?.word}!</h2>
-              <p className="text-sm text-slate-400 mb-4">{currentSign?.hint}</p>
+                </>
+              )}
+            </section>
+          ) : currentSign ? (
+            <section className="learn-activity-card">
+              {currentStep === 'quiz' ? (
+                <>
+                  <p className="learn-eyebrow">IDENTIFY THE SIGN</p>
 
-              {/* Clean container for your 3D canvas */}
-              <div className="mb-4">
-                <AvatarCanvas currentSign={currentSign?.word} />
-              </div>
+                  <div className="learn-avatar-preview">
+                    <AvatarCanvas currentSign={currentSign.word} />
+                  </div>
 
-              <button onClick={handleWebcamSuccess} className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-4 py-2 rounded-lg text-sm cursor-pointer">
-                Simulate Successful Sign →
+                  <h2>Which sign matches the handshape?</h2>
+                  <p className="learn-hint">{currentSign.hint}</p>
+
+                  <div className="learn-answer-grid">
+                    {(currentSign.options || []).map(option => {
+                      const selected = selectedAnswer === option;
+                      let stateClass = '';
+
+                      if (selected && isCorrect) {
+                        stateClass = ' answer-correct';
+                      } else if (selected && !isCorrect) {
+                        stateClass = ' answer-incorrect';
+                      }
+
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          disabled={isCorrect}
+                          aria-pressed={selected}
+                          onClick={() => handleOptionClick(option)}
+                          className={`learn-answer-button${stateClass}`}
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedAnswer && (
+                    <p
+                      className={`learn-answer-feedback ${
+                        isCorrect ? 'feedback-correct' : 'feedback-incorrect'
+                      }`}
+                      role="status"
+                    >
+                      {isCorrect
+                        ? 'Correct! Ready to practice.'
+                        : 'Not quite. Try another answer.'}
+                    </p>
+                  )}
+
+                  {isCorrect && (
+                    <button
+                      type="button"
+                      className="learn-primary-button learn-continue-button"
+                      onClick={handleContinueToPractice}
+                    >
+                      Continue to practice →
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="learn-eyebrow">YOUR TURN</p>
+                  <h2>Practice: {currentSign.word}</h2>
+                  <p className="learn-hint">{currentSign.hint}</p>
+
+                  <div className="learn-avatar-practice">
+                    <AvatarCanvas currentSign={currentSign.word} />
+                  </div>
+
+                  <p className="learn-practice-note">
+                    Practice the sign, then continue when you're ready.
+                  </p>
+
+                  <button
+                    type="button"
+                    className="learn-primary-button"
+                    onClick={handlePracticeComplete}
+                  >
+                    I’m ready to continue →
+                  </button>
+                  <p className="learn-demo-note">
+                    Practice is self-confirmed for now; webcam sign recognition
+                    is not connected yet.
+                  </p>
+                </>
+              )}
+            </section>
+          ) : (
+            <section className="learn-activity-card">
+              <h2>No signs found for this lesson yet.</h2>
+              <p>Check the signs data for this lesson.</p>
+              <button
+                type="button"
+                className="learn-secondary-button"
+                onClick={handleExitLesson}
+              >
+                Back to lessons
               </button>
-            </div>
-          </div>
-        )}
+            </section>
+          )}
+        </div>
       </div>
     );
   }
 
+  // Main Learn page
   return (
-    <div className="page learn-content-grid relative">
-
-      {/* Locked Unit Preview Modal */}
+    <div className="page learn-content-grid">
       {lockedPreviewUnit && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full text-white space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full">🔒 LOCKED UNIT</span>
-              <button onClick={() => setLockedPreviewUnit(null)} className="text-slate-400 hover:text-white cursor-pointer">✕</button>
+        <div
+          className="learn-modal-backdrop"
+          onClick={() => setLockedPreviewUnit(null)}
+        >
+          <section
+            className="learn-locked-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="locked-unit-title"
+            onClick={event => event.stopPropagation()}
+          >
+            <div className="learn-modal-header">
+              <span className="learn-locked-label">Locked unit</span>
+              <button
+                type="button"
+                className="learn-close-button"
+                aria-label="Close"
+                onClick={() => setLockedPreviewUnit(null)}
+              >
+                ×
+              </button>
             </div>
-            <h3 className="text-xl font-bold">{lockedPreviewUnit.title}</h3>
-            <p className="text-sm text-slate-300">Complete previous units to unlock this content!</p>
-            <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-800/80">
-              <span className="text-xs text-slate-400 block mb-2 font-semibold uppercase tracking-wider">Lessons Included:</span>
-              <ul className="space-y-1 text-sm text-slate-300">
-                {lockedPreviewUnit.lessons.map(l => (
-                  <li key={l.id} className="flex items-center gap-2">🔒 {l.label}</li>
+
+            <h2 id="locked-unit-title">{lockedPreviewUnit.title}</h2>
+            <p>Complete the earlier lessons to unlock this unit.</p>
+
+            <div className="learn-locked-lessons">
+              <p>LESSONS IN THIS UNIT</p>
+              <ul>
+                {(lockedPreviewUnit.lessons || []).map(lesson => (
+                  <li key={lesson.id}>{lesson.label}</li>
                 ))}
               </ul>
             </div>
-          </div>
+
+            <button
+              type="button"
+              className="learn-primary-button"
+              onClick={() => setLockedPreviewUnit(null)}
+            >
+              Got it
+            </button>
+          </section>
         </div>
       )}
 
-      {/* Main Lesson Content */}
       <main className="path-main-immersive">
+        <section className="unit-banner-card">
+          <div className="learn-unit-topline">
+            <span className="learn-eyebrow">{unit?.title}</span>
 
-        {/* Unit Banner Card */}
-        <div className="unit-banner-card flex flex-col gap-3 relative">
-          <div className="flex justify-between items-center">
-            <span style={{ color: '#0d9488', fontWeight: '800', fontSize: '0.85rem', letterSpacing: '0.05em' }}>
-              {unit.title}
-            </span>
             <button
-              onClick={() => setShowUnitSelector(!showUnitSelector)}
-              className="unit-selector-btn ml-auto"
+              type="button"
+              className="unit-selector-btn"
+              aria-expanded={showUnitSelector}
+              onClick={() => setShowUnitSelector(value => !value)}
             >
-              Explore All Units {showUnitSelector ? '▲' : '▼'}
+              Explore units {showUnitSelector ? '↑' : '↓'}
             </button>
           </div>
 
-          {/* Unit Dropdown Selector Drawer */}
           {showUnitSelector && (
             <div className="unit-dropdown-drawer">
-              {Object.entries(lessonPath).map(([key, u]) => {
-                const isSelected = key === activeUnitKey;
-                const isLocked = key !== 'prologue' && key !== 'unit-1';
-
-                let itemClass = "unit-dropdown-item";
-                if (isSelected) itemClass += " selected";
-                else if (isLocked) itemClass += " locked";
+              {Object.entries(lessonPath).map(([key, item]) => {
+                const selected = key === activeUnitKey;
+                const locked = !UNLOCKED_UNITS.has(key);
 
                 return (
                   <button
+                    type="button"
                     key={key}
                     onClick={() => handleSelectUnit(key)}
-                    className={itemClass}
+                    className={[
+                      'unit-dropdown-item',
+                      selected ? 'selected' : '',
+                      locked ? 'locked' : '',
+                    ].filter(Boolean).join(' ')}
                   >
-                    <div>
-                      <div className="text-sm font-semibold">{u.title}</div>
-                      {isLocked && <span className="text-xs text-amber-600 font-normal">Locked • Click to Preview</span>}
-                    </div>
-                    <span>{isSelected ? '✓' : isLocked ? '🔒' : '→'}</span>
+                    <span>
+                      <span className="unit-dropdown-title">
+                        {item.title}
+                      </span>
+                      <span className="unit-dropdown-subtitle">
+                        {locked
+                          ? 'Locked · Preview unit'
+                          : selected
+                            ? 'Currently viewing'
+                            : 'Available'}
+                      </span>
+                    </span>
+                    <span aria-hidden="true">
+                      {selected ? '✓' : locked ? '🔒' : '→'}
+                    </span>
                   </button>
                 );
               })}
             </div>
           )}
 
-          <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#1e293b', margin: '4px 0' }}>
-            {activeUnitKey === 'prologue' ? 'Foundations & Anatomy' : 'Fundamentals'}
-          </h2>
+          <h1 className="learn-page-title">
+            {activeUnitKey === 'prologue'
+              ? 'Foundations & Anatomy'
+              : unit?.title || 'Learn ASL'}
+          </h1>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#0d9488', fontWeight: '600', marginTop: '4px' }}>
-            <span>{unit.lessons.length} lessons in this unit</span>
-            <span>Ready</span>
+          <p className="learn-unit-description">
+            Work through each lesson at your own pace. Finish one to unlock the
+            next.
+          </p>
+
+          <div className="learn-progress-labels">
+            <span>
+              {completedCount} of {lessons.length} lessons completed
+            </span>
+            <span>{unitProgress}%</span>
           </div>
 
-          <div style={{ width: '100%', background: '#ccfbf1', height: '8px', borderRadius: '4px', overflow: 'hidden', marginTop: '4px' }}>
-            <div style={{ background: '#0d9488', height: '100%', width: activeUnitKey === 'prologue' ? '100%' : '35%', borderRadius: '4px' }}></div>
+          <div
+            className="learn-progress-track"
+            role="progressbar"
+            aria-label="Unit progress"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={unitProgress}
+          >
+            <div
+              className="learn-progress-fill"
+              style={{ width: `${unitProgress}%` }}
+            />
           </div>
-        </div>
+        </section>
 
-        {/* Vertical Lesson Path Cards */}
-        <div className="lesson-path-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '24px' }}>
-          <h3>LESSON PATH</h3>
+        <section className="lesson-path-list">
+          <h2 className="learn-section-label">LESSON PATH</h2>
 
-          {unit.lessons.map((lesson) => {
-            const isCompleted = lesson.status === 'completed';
-            const isActive = lesson.status === 'active';
-            const isLocked = lesson.status === 'locked';
+          {lessons.map((lesson, index) => {
+            const status = getLessonState(lesson, index);
+            const locked = status === 'locked';
+            const completed = status === 'completed';
+            const active = status === 'available';
 
             return (
-              <div
+              <article
                 key={lesson.id}
-                className={`lesson-card ${isActive ? 'active-lesson' : ''} ${isLocked ? 'locked-lesson' : ''}`}
+                className={[
+                  'lesson-card',
+                  active ? 'active-lesson' : '',
+                  locked ? 'locked-lesson' : '',
+                  completed ? 'completed-lesson' : '',
+                ].filter(Boolean).join(' ')}
               >
                 <div className="lesson-card-left">
-                  <div className={`lesson-icon ${isCompleted ? '' : isActive ? 'active-icon' : 'locked-icon'}`}>
-                    {isCompleted ? '✓' : isActive ? (lesson.icon || '👋') : '🔒'}
+                  <div
+                    className={[
+                      'lesson-icon',
+                      active ? 'active-icon' : '',
+                      locked ? 'locked-icon' : '',
+                      completed ? 'completed-icon' : '',
+                    ].filter(Boolean).join(' ')}
+                    aria-hidden="true"
+                  >
+                    {completed ? '✓' : locked ? '🔒' : lesson.icon || '👋'}
                   </div>
+
                   <div className="lesson-info">
-                    <h4>{lesson.label}</h4>
-                    <p>⏱ 5 min &nbsp;•&nbsp; ⚡ 50 XP &nbsp;•&nbsp; {isCompleted ? 'Completed' : isActive ? 'In Progress' : 'Locked'}</p>
+                    <h3>{lesson.label}</h3>
+                    <p>
+                      {completed
+                        ? 'Completed'
+                        : locked
+                          ? 'Complete the previous lesson to unlock'
+                          : 'Ready to learn'}
+                    </p>
                   </div>
                 </div>
 
-                {!isLocked && (
-                  <button onClick={() => handleStartLesson(lesson.id)} className="start-btn cursor-pointer">
-                    {isCompleted ? 'Review →' : 'Start →'}
+                {locked ? (
+                  <span className="lesson-status-locked">Locked</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleStartLesson(lesson.id)}
+                    className="start-btn"
+                  >
+                    {completed ? 'Review' : 'Start'} →
                   </button>
                 )}
-              </div>
+              </article>
             );
           })}
-        </div>
-
+        </section>
       </main>
 
-      {/* Sidebar */}
       <aside className="learn-sidebar-minimal">
-        {/* Goals Group */}
-        <div className="sidebar-card">
-          <h3>MY GOALS</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <label className="goal-item">
-              <input type="checkbox" defaultChecked style={{ width: '16px', height: '16px' }} />
-              <span style={{ textDecoration: 'line-through', opacity: 0.6 }}>Learn 5 Signs Today</span>
-            </label>
-            <label className="goal-item">
-              <input type="checkbox" style={{ width: '16px', height: '16px' }} />
-              <span>Practice 15 Mins</span>
-            </label>
-            <label className="goal-item">
-              <input type="checkbox" style={{ width: '16px', height: '16px' }} />
-              <span>Complete Unit 1</span>
-            </label>
+        <section className="sidebar-card">
+          <div className="learn-sidebar-heading">
+            <h2>MY GOALS</h2>
+            <span>{completedGoals.length}/{INITIAL_GOALS.length}</span>
           </div>
-          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginBottom: '4px' }}>
-              <span>1/3 goals</span>
-              <span>33%</span>
-            </div>
-            <div style={{ width: '100%', background: '#f1f5f9', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
-              <div style={{ background: 'var(--accent)', height: '100%', width: '33%', borderRadius: '3px' }}></div>
-            </div>
-          </div>
-        </div>
 
-        {/* Culture Spotlight */}
-        <div className="sidebar-card">
-          <h3>DEAF CULTURE SPOTLIGHT</h3>
-          <div className="culture-tag">
-            💙 Turquoise & Navy
-          </div>
-          <p>
-            Why Turquoise and Navy Blue were chosen for ASL pride and community representation.
-          </p>
-          <a href="#read" style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>Read more →</a>
-        </div>
+          <div className="learn-goal-list">
+            {INITIAL_GOALS.map(goal => {
+              const checked = completedGoals.includes(goal.id);
 
-        {/* Up Next Card */}
-        <div className="sidebar-card-dark">
-          <span>UP NEXT</span>
-          <h4>Unit 2: Expressions</h4>
-          <p>
-            Facial grammar, emotions, and conversational flow.
+              return (
+                <label className="goal-item" key={goal.id}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleGoal(goal.id)}
+                  />
+                  <span className={checked ? 'goal-complete' : ''}>
+                    {goal.label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          <div className="learn-goal-progress">
+            <div
+              className="learn-progress-track"
+              role="progressbar"
+              aria-label="Daily goals"
+              aria-valuemin={0}
+              aria-valuemax={INITIAL_GOALS.length}
+              aria-valuenow={completedGoals.length}
+            >
+              <div
+                className="learn-progress-fill"
+                style={{
+                  width: `${
+                    (completedGoals.length / INITIAL_GOALS.length) * 100
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
+          <p className="learn-small-note">
+            These checkboxes are session-only for now.
           </p>
-        </div>
+        </section>
+
+        <section className="sidebar-card">
+          <h2>DEAF CULTURE SPOTLIGHT</h2>
+          <span className="culture-tag">Turquoise & Navy</span>
+          <p>
+            Learn about the colors and symbols used by members of the Deaf
+            community, and remember that no single symbol represents everyone.
+          </p>
+        </section>
+
+        <section className="sidebar-card-dark">
+          <span>KEEP GOING</span>
+          <h2>
+            {completedCount === lessons.length && lessons.length > 0
+              ? 'Unit complete'
+              : 'One lesson at a time'}
+          </h2>
+          <p>
+            {completedCount === lessons.length && lessons.length > 0
+              ? 'You’ve finished the lessons currently available in this unit.'
+              : 'Finish your current lesson to open the next step in your path.'}
+          </p>
+        </section>
       </aside>
     </div>
   );

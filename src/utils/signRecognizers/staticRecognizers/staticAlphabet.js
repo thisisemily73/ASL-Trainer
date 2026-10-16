@@ -12,7 +12,8 @@ import * as specialPositions from './specialPositions'
 export const ALPHABET_SIGN_MATRIX = {
     "A": {
         fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
-        thumb:   ["OUT", "UP"],
+        thumb:   ["UP"],
+        thumbShape: ["STRAIGHT"],
         rotation: ["PALM_IN", "PALM_OUT"],
         spacing:  [["TOGETHER"], ["TOGETHER"], ["TOGETHER"]]
     },
@@ -20,19 +21,22 @@ export const ALPHABET_SIGN_MATRIX = {
     "B": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["EXTENDED"]],
         thumb:   ["IN", "UP"],
+        thumbShape: ["STRAIGHT"],
         rotation: ["PALM_OUT"],
         spacing: [["TOGETHER"], ["TOGETHER"], ["TOGETHER"]]
     },
     // C: Fingers relaxed or curved ("CURLED" or "CLAWED"). Hand sideways.
     "C": {
         fingers: [["CURLED", "CLAWED"], ["CURLED", "CLAWED"], ["CURLED", "CLAWED"], ["CURLED", "CLAWED"]],
-        thumb:   ["OUT", "UP"],
+        thumb:   ["OUT_FRONT", "UP"],
+        thumbShape: ["STRAIGHT"],
         rotation: ["SIDEWAYS", "PALM_OUT"],
         spacing:  ["TOGETHER", "APART"]
     },
     "D": {
         fingers: [["EXTENDED"], ["CLAWED"], ["CLAWED"], ["CLAWED", "CURLED"]],
-        thumb:   ["UP", "OUT"], // Thumb touches curled middle fingertips
+        thumb:   ["OUT_FRONT", "UP"], // Thumb touches curled middle fingertips
+        thumbShape: ["BENT"],
         rotation: ["SIDEWAYS"],
         spacing:  [["APART", "TOGETHER"], ["TOGETHER", "APART"], ["TOGETHER"], ["TOGETHER"]]
     },
@@ -40,13 +44,15 @@ export const ALPHABET_SIGN_MATRIX = {
     // --- PROBLEMS --- vv
     "E": {
         fingers: [["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"], ["TUCKED", "CLAWED"]],
-        thumb:   ["UP", "IN"], 
+        thumb:   ["IN", "UP"],
+        thumbShape: ["STRAIGHT"],
         rotation: ["PALM_OUT", "PALM_IN"],
         spacing:  ["TOGETHER"]
     },
     "F": {
         fingers: [["TUCKED","CLAWED"], ["CURLED", "EXTENDED"], ["EXTENDED"], ["CURLED", "EXTENDED"]], // Index down holding thumb
-        thumb:   ["OUT"],
+        thumb:   ["OUT_FRONT"],
+        thumbShape: ["BENT"],
         rotation: ["SIDEWAYS"],
         spacing:  ["APART"]
     },
@@ -58,25 +64,27 @@ export const ALPHABET_SIGN_MATRIX = {
     },
     "H": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED","CLAWED"], ["TUCKED","CLAWED"]], // Index & Middle out horizontal
-        thumb:   ["OUT", "PALM_IN"],
+        thumb:   ["OUT_FRONT", "PALM_IN"],
+        thumbShape: ["STRAIGHT"],
         rotation: ["PALM_OUT"],
         spacing:  ["TOGETHER", "APART"] // Index and Middle stacked together
     },
     "I": {
         fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["EXTENDED"]], // Strictly pinky up
         thumb:   ["UP"],
+        thumbShape: ["STRAIGHT"],
         rotation: ["PALM_OUT", "PALM_IN"],
         spacing:  ["TOGETHER", "APART"]
     },
     "K": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED"], ["TUCKED"]], // Index up, middle out/forward
-        thumb:   ["UP", "OUT"], // Thumb touches middle finger joint
+        thumb:   ["UP", "OUT_FRONT"], // Thumb touches middle finger joint
         rotation: ["SIDEWAYS"],
         spacing:  ["APART"]
     },
     "L": {
         fingers: [["EXTENDED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
-        thumb:   ["OUT"], // Strict: Thumb MUST point far out forming an 'L'
+        thumb:   ["OUT_SIDE"], // Strict: Thumb MUST point far out forming an 'L'
         rotation: ["PALM_OUT", "SIDEWAYS"],
         spacing:  ["APART"]
     },
@@ -96,21 +104,21 @@ export const ALPHABET_SIGN_MATRIX = {
     },
     "O": {
         fingers: [["CLAWED"], ["CLAWED"], ["CLAWED"], ["CLAWED", "CURLED"]],
-        thumb:   ["OUT"], // Curved hand forming a closed loop shape
+        thumb:   ["OUT_FRONT"], // Curved hand forming a closed loop shape
         rotation: ["SIDEWAYS"],
         spacing:  ["TOGETHER"]
     },
     // --- PROBLEM (glitches as "K" or "P") --- vv
     "P": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED"], ["TUCKED","CLAWED"]], // Downward pointed K shape
-        thumb:   ["OUT"],
+        thumb:   ["OUT_FRONT"],
         rotation: ["SIDEWAYS"],
         spacing:  ["APART"]
     },
     // // --- PROBLEM (glitches as "L" or "Q") --- vv
     "Q": {
         fingers: [["EXTENDED"], ["CLAWED"], ["TUCKED","CLAWED"], ["TUCKED"]], // Downward pointed G shape
-        thumb:   ["OUT"],
+        thumb:   ["OUT_FRONT"],
         rotation: ["SIDEWAYS"],
         spacing:  ["APART"]
     },
@@ -131,37 +139,37 @@ export const ALPHABET_SIGN_MATRIX = {
     // --- PROBLEM --- vv
     "T": {
         fingers: [["TUCKED","CLAWED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
-        thumb:   ["OUT"], // Thumb peeking out between index and middle
+        thumb:   ["OUT_FRONT"], // Thumb peeking out between index and middle
         rotation: ["PALM_OUT", "PALM_IN"],
         spacing:  ["TOGETHER", "APART"]
     },
     "U": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED","CLAWED"], ["TUCKED","CLAWED"]],
-        thumb:   ["PALM_IN", "UP"],
+        thumb:   ["IN", "UP"],
         rotation: ["PALM_OUT"],
         spacing:  ["TOGETHER"] // Tightly guards against V!
     },
     "V": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["TUCKED","CLAWED"], ["TUCKED","CLAWED"]],
-        thumb:   ["PALM_IN", "UP"],
+        thumb:   ["IN", "UP"],
         rotation: ["PALM_OUT"],
         spacing:  ["APART"] // Tightly guards against U!
     },
     "W": {
         fingers: [["EXTENDED"], ["EXTENDED"], ["EXTENDED"], ["TUCKED","CLAWED"]], // Three fingers extended straight up
-        thumb:   ["PALM_IN", "UP"],
+        thumb:   ["IN", "UP"],
         rotation: ["PALM_OUT"],
         spacing:  ["APART"]
     },
     "X": {
         fingers: [["CURLED"], ["TUCKED","CLAWED"], ["TUCKED","CLAWED"], ["TUCKED","CLAWED"]], // Index hooked like a claw
-        thumb:   ["PALM_IN", "UP"],
+        thumb:   ["IN", "UP"],
         rotation: ["SIDEWAYS"],
         spacing:  ["TOGETHER", "APART"]
     },
     "Y": {
         fingers: [["TUCKED","CLAWED"], ["TUCKED","CLAWED"], ["TUCKED","CLAWED"], ["EXTENDED"]],
-        thumb:   ["OUT"], // Strict: Thumb must span completely out sideways
+        thumb:   ["OUT_SIDE"], // Strict: Thumb must span completely out sideways
         rotation: ["PALM_OUT"],
         spacing:  ["TOGETHER"]
     }

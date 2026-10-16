@@ -1,10 +1,10 @@
 // signPositions.js
 
-const indexMCP = 5;   const indexPIP = 6;   const indexTIP = 8;
-const middleMCP = 9;  const middlePIP = 10;  const middleTIP = 12;
-const ringMCP = 13;   const ringPIP = 14;   const ringTIP = 16;
-const pinkyMCP = 17;  const pinkyPIP = 18;  const pinkyTIP = 20;
-const thumbMCP = 2;   const thumbTIP = 4;
+const indexMCP = 5; const indexPIP = 6; const indexTIP = 8;
+const middleMCP = 9; const middlePIP = 10; const middleTIP = 12;
+const ringMCP = 13; const ringPIP = 14; const ringTIP = 16;
+const pinkyMCP = 17; const pinkyPIP = 18; const pinkyTIP = 20;
+const thumbCMC = 1; const thumbMCP = 2; const thumbIP = 3; const thumbTIP = 4;
 
 export const getDistance = (p1, p2) => {
     if (!p1 || !p2) return 0;
@@ -21,19 +21,19 @@ export const getFingerCurlFactor = (landmarks, tipIdx, pipIdx, mcpIdx) => {
     const pipToTip = getDistance(landmarks[pipIdx], landmarks[tipIdx]);
     const idealStraightDistance = mcpToPip + pipToTip;
     const actualTipToMcp = getDistance(landmarks[tipIdx], landmarks[mcpIdx]);
-    
+
     const straightnessRatio = actualTipToMcp / idealStraightDistance;
-    
+
     // Clamp between 0.0 and 1.0
     const curlFactor = Math.max(0, Math.min(1, 1 - straightnessRatio));
     return curlFactor;
 };
 
 // Expose individual finger curl factors (0.0 = straight, 1.0 = curled)
-export const getIndexCurl  = (landmarks) => getFingerCurlFactor(landmarks, indexTIP, indexPIP, indexMCP);
+export const getIndexCurl = (landmarks) => getFingerCurlFactor(landmarks, indexTIP, indexPIP, indexMCP);
 export const getMiddleCurl = (landmarks) => getFingerCurlFactor(landmarks, middleTIP, middlePIP, middleMCP);
-export const getRingCurl   = (landmarks) => getFingerCurlFactor(landmarks, ringTIP, ringPIP, ringMCP);
-export const getPinkyCurl  = (landmarks) => getFingerCurlFactor(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
+export const getRingCurl = (landmarks) => getFingerCurlFactor(landmarks, ringTIP, ringPIP, ringMCP);
+export const getPinkyCurl = (landmarks) => getFingerCurlFactor(landmarks, pinkyTIP, pinkyPIP, pinkyMCP);
 
 // RESTORED FINGER STATE HELPERS (REQUIRED FOR RECOGNIZER)
 
@@ -43,28 +43,134 @@ export const getFingerStateFromCurl = (curl) => {
     return "TUCKED";
 };
 
-export const getIndexState  = (landmarks) => getFingerStateFromCurl(getIndexCurl(landmarks));
+export const getIndexState = (landmarks) => getFingerStateFromCurl(getIndexCurl(landmarks));
 export const getMiddleState = (landmarks) => getFingerStateFromCurl(getMiddleCurl(landmarks));
-export const getRingState   = (landmarks) => getFingerStateFromCurl(getRingCurl(landmarks));
-export const getPinkyState  = (landmarks) => getFingerStateFromCurl(getPinkyCurl(landmarks));
+export const getRingState = (landmarks) => getFingerStateFromCurl(getRingCurl(landmarks));
+export const getPinkyState = (landmarks) => getFingerStateFromCurl(getPinkyCurl(landmarks));
 
 // ORIGINAL SPATIAL & ROTATION HELPERS
 
+
 export const getThumbState = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return "IN";
+
     const thumbTip = landmarks[thumbTIP];
-    const pinkyKnuckle = landmarks[pinkyMCP];
+    const thumbBase = landmarks[thumbMCP];
     const indexKnuckle = landmarks[indexMCP];
-    
-    const thumbDistance = getDistance(thumbTip, pinkyKnuckle);
+    const pinkyKnuckle = landmarks[pinkyMCP];
+    const middleKnuckle = landmarks[middleMCP];
+
     const palmWidth = getDistance(indexKnuckle, pinkyKnuckle);
+
+    if (palmWidth === 0) return "IN";
+
+    const thumbDistance = getDistance(thumbTip, pinkyKnuckle);
     const thumbRatio = thumbDistance / palmWidth;
 
-    if (thumbRatio > 1.15) return "OUT"; 
-    if (landmarks[thumbTIP].y < landmarks[thumbMCP].y - 0.02) return "UP"; 
-    
-    return "IN"; 
+    if (thumbRatio > 1.15) {
+        const depthDifference = thumbTip.z - middleKnuckle.z;
+        const depthThreshold = palmWidth * 0.25;
+
+        if (Math.abs(depthDifference) > depthThreshold) {
+            return "OUT_FRONT";
+        }
+
+        return "OUT_SIDE";
+    }
+
+    if (thumbTip.y < thumbBase.y - 0.02) {
+        return "UP";
+    }
+
+    return "IN";
 };
+
+
+/**
+ * Calculates the angle ABC in degrees.
+ * 180 degrees = straight; smaller angles = more bent.
+ */
+const getJointAngle = (a, b, c) => {
+    if (!a || !b || !c) return null;
+
+    const ba = {
+        x: a.x - b.x,
+        y: a.y - b.y,
+        z: a.z - b.z,
+    };
+
+    const bc = {
+        x: c.x - b.x,
+        y: c.y - b.y,
+        z: c.z - b.z,
+    };
+
+    const magnitudeBA = Math.sqrt(
+        ba.x ** 2 + ba.y ** 2 + ba.z ** 2
+    );
+
+    const magnitudeBC = Math.sqrt(
+        bc.x ** 2 + bc.y ** 2 + bc.z ** 2
+    );
+
+    if (magnitudeBA === 0 || magnitudeBC === 0) {
+        return null;
+    }
+
+    const dotProduct =
+        ba.x * bc.x +
+        ba.y * bc.y +
+        ba.z * bc.z;
+
+    const cosine = Math.max(
+        -1,
+        Math.min(1, dotProduct / (magnitudeBA * magnitudeBC))
+    );
+
+    return Math.acos(cosine) * (180 / Math.PI);
+};
+
+/**
+ * Returns STRAIGHT or BENT based on thumb joint angles.
+ */
+
+export const getThumbShape = (landmarks) => {
+    if (
+        !landmarks ||
+        landmarks.length <= thumbTIP ||
+        !landmarks[thumbCMC] ||
+        !landmarks[thumbMCP] ||
+        !landmarks[thumbIP] ||
+        !landmarks[thumbTIP]
+    ) {
+        return "UNKNOWN";
+    }
+
+    const mcpAngle = getJointAngle(
+        landmarks[thumbCMC],
+        landmarks[thumbMCP],
+        landmarks[thumbIP]
+    );
+
+    const ipAngle = getJointAngle(
+        landmarks[thumbMCP],
+        landmarks[thumbIP],
+        landmarks[thumbTIP]
+    );
+
+    if (mcpAngle === null || ipAngle === null) {
+        return "UNKNOWN";
+    }
+
+    if (mcpAngle < 150 || ipAngle < 155) {
+        return "BENT";
+    }
+
+    return "STRAIGHT";
+};
+
+
+
 
 export const getHandRotation = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return "UNKNOWN";
@@ -74,7 +180,7 @@ export const getHandRotation = (landmarks) => {
 
     const handWidthX = Math.abs(indexMCPCoord.x - pinkyMCPCoord.x);
     const handDepthZ = Math.abs(indexMCPCoord.z - pinkyMCPCoord.z);
-    
+
     if (handDepthZ > handWidthX * 0.9) {
         return "SIDEWAYS";
     }
@@ -83,9 +189,9 @@ export const getHandRotation = (landmarks) => {
     const THRESHOLD = 0.02;
 
     if (diffX < -THRESHOLD) {
-        return "PALM_IN";  
+        return "PALM_IN";
     } else if (diffX > THRESHOLD) {
-        return "PALM_OUT"; 
+        return "PALM_OUT";
     }
 
     return "SIDEWAYS";
@@ -112,21 +218,21 @@ export const isRingAndPinkyTogether = (landmarks) => {
 // Aggregate check for all 4 fingers being held together
 export const areAllFingersTogether = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
-    return isIndexAndMiddleTogether(landmarks) && 
-           isMiddleAndRingTogether(landmarks) && 
-           isRingAndPinkyTogether(landmarks);
+    return isIndexAndMiddleTogether(landmarks) &&
+        isMiddleAndRingTogether(landmarks) &&
+        isRingAndPinkyTogether(landmarks);
 };
 
 export const getHandOrientationY = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return "PARALLEL";
-    
+
     const indexKnuckle = landmarks[indexMCP];
     const pinkyKnuckle = landmarks[pinkyMCP];
-    const diffY = indexKnuckle.y - pinkyKnuckle.y; 
+    const diffY = indexKnuckle.y - pinkyKnuckle.y;
 
     if (diffY < -0.04) return "INDEX_ABOVE";
     if (diffY > 0.04) return "INDEX_BELOW";
-    
+
     return "PARALLEL";
 };
 
@@ -136,8 +242,8 @@ const TOUCH_THRESHOLD = 0.045; // Proximity limit for touch detection
 
 export const thumbTouchingIndex = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
-    return getDistance(landmarks[thumbTIP], landmarks[indexTIP]) < TOUCH_THRESHOLD || 
-           getDistance(landmarks[thumbTIP], landmarks[indexPIP]) < TOUCH_THRESHOLD;
+    return getDistance(landmarks[thumbTIP], landmarks[indexTIP]) < TOUCH_THRESHOLD ||
+        getDistance(landmarks[thumbTIP], landmarks[indexPIP]) < TOUCH_THRESHOLD;
 };
 
 export const thumbTouchingMiddle = (landmarks) => {
@@ -169,20 +275,20 @@ export const thumbTuckedUnder = (landmarks) => {
 export const isThumbBetweenIndexAndMiddle = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
     const thumbX = landmarks[thumbTIP].x;
-    return thumbX > Math.min(landmarks[indexMCP].x, landmarks[middleMCP].x) && 
-           thumbX < Math.max(landmarks[indexMCP].x, landmarks[middleMCP].x);
+    return thumbX > Math.min(landmarks[indexMCP].x, landmarks[middleMCP].x) &&
+        thumbX < Math.max(landmarks[indexMCP].x, landmarks[middleMCP].x);
 };
 
 export const isThumbBetweenMiddleAndRing = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
     const thumbX = landmarks[thumbTIP].x;
-    return thumbX > Math.min(landmarks[middleMCP].x, landmarks[ringMCP].x) && 
-           thumbX < Math.max(landmarks[middleMCP].x, landmarks[ringMCP].x);
+    return thumbX > Math.min(landmarks[middleMCP].x, landmarks[ringMCP].x) &&
+        thumbX < Math.max(landmarks[middleMCP].x, landmarks[ringMCP].x);
 };
 
 export const isThumbBetweenRingAndPinky = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
     const thumbX = landmarks[thumbTIP].x;
-    return thumbX > Math.min(landmarks[ringMCP].x, landmarks[pinkyMCP].x) && 
-           thumbX < Math.max(landmarks[ringMCP].x, landmarks[pinkyMCP].x);
+    return thumbX > Math.min(landmarks[ringMCP].x, landmarks[pinkyMCP].x) &&
+        thumbX < Math.max(landmarks[ringMCP].x, landmarks[pinkyMCP].x);
 };

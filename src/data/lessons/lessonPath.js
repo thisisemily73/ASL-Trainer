@@ -10,11 +10,18 @@ export const lessonPath = {
         content: [
           {
             title: "Handshape",
-            description: "The specific configuration or shape your hand makes (such as a fist, open hand, or specific letter)."
+            description: "The specific configuration or shape your hand makes (such as a fist, open hand, or specific letter).",
           },
           {
             title: "Palm Orientation",
-            description: "The direction your palm faces (up, down, left, right, forward, or backward)."
+            description: "The direction your palm faces (left, right, forward, or backward).",
+            signs: [
+              {
+                word: "Direction",
+                hint: "Make a fist with thumb resting on the side of index finger.",
+                options: ["Left", "Right", "Forward", "Backward"],
+              }
+            ]
           },
           {
             title: "Location",

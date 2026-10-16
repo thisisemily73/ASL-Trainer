@@ -68,5 +68,13 @@
 ### October 13, 2026
 - Calibrated the letter 'a' using rotate on the axes
 
-### October 16, 2026
+### October 15, 2026
 - Began adding and testing rules for 3d model hand and finger positions. Successfully tested some alphabet signs (a, b)
+
+### October 16, 2026
+- Changed AvatarCanvas to use quaternions instead of rotations to protect against gimbal lock
+- Added subvariations to the thumb position "OUT"
+- 1. 'OUT_FRONT': when the thumb sticks out in front of the palm, but still on its natural rotation
+- 2. 'OUT_SIDE': when the thumb sticks out to the side as if forming the letter "L"
+- Revamped the style of the Learn page
+- Improved the functionality of the lessons by cleaning up the options and looks.
