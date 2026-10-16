@@ -82,3 +82,4 @@
 - Connected sign detection to the practice flow to evaluate learners' gestures and provide feedback.
 - Removed hardcoded unit restrictions so learners can navigate between available units.
 - Removed automatic lesson completion based on predefined lesson statuses so completion reflects lessons finished during the session.
+- Added firebase.
