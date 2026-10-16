@@ -77,4 +77,8 @@
 - 1. 'OUT_FRONT': when the thumb sticks out in front of the palm, but still on its natural rotation
 - 2. 'OUT_SIDE': when the thumb sticks out to the side as if forming the letter "L"
 - Revamped the style of the Learn page
-- Improved the functionality of the lessons by cleaning up the options and looks.
+- Improved lesson functionality and cleaned up lesson options and UI.
+- Integrated MediaPipe hand and pose landmark detection into sign practice, enabling real-time webcam tracking and visual skeleton overlays.
+- Connected sign detection to the practice flow to evaluate learners' gestures and provide feedback.
+- Removed hardcoded unit restrictions so learners can navigate between available units.
+- Removed automatic lesson completion based on predefined lesson statuses so completion reflects lessons finished during the session.

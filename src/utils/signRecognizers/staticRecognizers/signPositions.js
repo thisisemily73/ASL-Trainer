@@ -52,34 +52,55 @@ export const getPinkyState = (landmarks) => getFingerStateFromCurl(getPinkyCurl(
 
 
 export const getThumbState = (landmarks) => {
-    if (!landmarks || landmarks.length === 0) return "IN";
+    if (!landmarks || landmarks.length <= thumbTIP) {
+        return "IN";
+    }
 
     const thumbTip = landmarks[thumbTIP];
     const thumbBase = landmarks[thumbMCP];
+    const thumbIPJoint = landmarks[thumbIP];
     const indexKnuckle = landmarks[indexMCP];
     const pinkyKnuckle = landmarks[pinkyMCP];
-    const middleKnuckle = landmarks[middleMCP];
+
+    if (
+        !thumbTip ||
+        !thumbBase ||
+        !thumbIPJoint ||
+        !indexKnuckle ||
+        !pinkyKnuckle
+    ) {
+        return "IN";
+    }
 
     const palmWidth = getDistance(indexKnuckle, pinkyKnuckle);
 
     if (palmWidth === 0) return "IN";
 
-    const thumbDistance = getDistance(thumbTip, pinkyKnuckle);
-    const thumbRatio = thumbDistance / palmWidth;
+    // Normalize measurements against the size of the hand.
+    const verticalRise = (thumbBase.y - thumbTip.y) / palmWidth;
+    const horizontalExtension =
+        getDistance(thumbTip, thumbBase) / palmWidth;
 
-    if (thumbRatio > 1.15) {
-        const depthDifference = thumbTip.z - middleKnuckle.z;
-        const depthThreshold = palmWidth * 0.25;
+    // Check UP first: MediaPipe image coordinates increase downward.
+    if (
+        verticalRise > 0.25 &&
+        horizontalExtension > 0.2
+    ) {
+        return "UP";
+    }
 
-        if (Math.abs(depthDifference) > depthThreshold) {
+    // Thumb extends outward from the palm.
+    const thumbDistance =
+        getDistance(thumbTip, pinkyKnuckle) / palmWidth;
+
+    if (thumbDistance > 1.15) {
+        const depthDifference = thumbTip.z - landmarks[middleMCP].z;
+
+        if (Math.abs(depthDifference) > 0.15) {
             return "OUT_FRONT";
         }
 
         return "OUT_SIDE";
-    }
-
-    if (thumbTip.y < thumbBase.y - 0.02) {
-        return "UP";
     }
 
     return "IN";
@@ -215,12 +236,22 @@ export const isRingAndPinkyTogether = (landmarks) => {
     return getDistance(landmarks[ringTIP], landmarks[pinkyTIP]) < palmWidth * 0.35;
 };
 
-// Aggregate check for all 4 fingers being held together
+// Check for all 4 fingers being held together
 export const areAllFingersTogether = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
     return isIndexAndMiddleTogether(landmarks) &&
         isMiddleAndRingTogether(landmarks) &&
         isRingAndPinkyTogether(landmarks);
+};
+
+export const getFingerSpacing = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) {
+        return "UNKNOWN";
+    }
+
+    return areAllFingersTogether(landmarks)
+        ? "TOGETHER"
+        : "APART";
 };
 
 export const getHandOrientationY = (landmarks) => {

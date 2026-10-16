@@ -703,6 +703,77 @@
   }
 }
 
+/* PRACTICE */
+.practice-session {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.practice-instructions h2 {
+  margin: 6px 0 8px;
+}
+
+.practice-instructions p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--text-secondary, #64748b);
+}
+
+.practice-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  color: var(--primary);
+}
+
+.camera-status {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  overflow-wrap: anywhere;
+}
+
+.practice-feedback {
+  padding: 16px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 10px;
+  background: var(--card-bg, #fff);
+}
+
+.practice-feedback h3 {
+  margin: 0 0 8px;
+}
+
+.practice-feedback p {
+  line-height: 1.5;
+}
+
+.practice-feedback--correct {
+  border-left: 4px solid #25845c;
+}
+
+.practice-feedback--incorrect,
+.practice-feedback--retry {
+  border-left: 4px solid #c58a32;
+}
+
+.practice-feedback button {
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .practice-session {
+    gap: 12px;
+  }
+
+  .practice-feedback {
+    padding: 12px;
+  }
+}
+
 @media (max-width: 540px) {
   .learn-sidebar-minimal {
     display: flex;

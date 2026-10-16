@@ -7,7 +7,7 @@ function CameraBox({
     title = "LIVE ASL SANDBOX",
     onStreamToggle,
     onSignDetected,
-    onSignSubmitted, // <-- ADDED PROP HERE
+    onSignSubmitted,
     renderCanvas
 }) {
     const videoRef = useRef(null);
@@ -27,6 +27,9 @@ function CameraBox({
 
     const isRecordingRef = useRef(false);
     const sessionFramesRef = useRef([]);
+
+    const [signLocked, setSignLocked] = useState(false);
+    const signLockedRef = useRef(false);
 
 
     useEffect(() => {
@@ -106,7 +109,7 @@ function CameraBox({
         if (onSignDetected) onSignDetected('Camera paused', 0);
     };
 
-    // --- HELPER TO PROCESS AND SUBMIT WHEN HANDS DROP ---
+    // HELPER TO PROCESS AND SUBMIT WHEN HANDS DROP
     const triggerSignSubmission = () => {
         const history = sessionSignHistoryRef.current;
         if (history.length === 0) return;
@@ -167,7 +170,13 @@ function CameraBox({
             }));
 
             if (onSignSubmitted) {
-                onSignSubmitted({ word: topSign, match: topMatchPercent }, alternatives);
+                signLockedRef.current = true;
+                setSignLocked(true);
+
+                onSignSubmitted(
+                    { word: topSign, match: topMatchPercent },
+                    alternatives
+                );
             }
         }
     };
@@ -197,23 +206,47 @@ function CameraBox({
         return totalDistance > 0.4; // Tune this threshold if needed
     };
 
+
     const predictWebcam = () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
 
-        if (!video || !canvas || !handLandmarkerRef.current || !poseLandmarkerRef.current) return;
+        if (!video || !canvas) {
+            requestRef.current = requestAnimationFrame(predictWebcam);
+            return;
+        }
+
+        if (!handLandmarkerRef.current || !poseLandmarkerRef.current) {
+            requestRef.current = requestAnimationFrame(predictWebcam);
+            return;
+        }
 
         if (video.readyState >= 2 && !video.paused && !video.ended) {
-            let startTimeMs = performance.now();
+            const startTimeMs = performance.now();
             const ctx = canvas.getContext('2d');
 
-            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+            if (!ctx) {
+                requestRef.current = requestAnimationFrame(predictWebcam);
+                return;
+            }
+
+            if (
+                canvas.width !== video.videoWidth ||
+                canvas.height !== video.videoHeight
+            ) {
                 canvas.width = video.videoWidth || 640;
                 canvas.height = video.videoHeight || 480;
             }
 
-            const poseResults = poseLandmarkerRef.current.detectForVideo(video, startTimeMs);
-            const handResults = handLandmarkerRef.current.detectForVideo(video, startTimeMs);
+            const poseResults = poseLandmarkerRef.current.detectForVideo(
+                video,
+                startTimeMs
+            );
+
+            const handResults = handLandmarkerRef.current.detectForVideo(
+                video,
+                startTimeMs
+            );
 
             ctx.save();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -221,58 +254,92 @@ function CameraBox({
             let resultMessage = 'Show hand to camera to begin...';
             let confidenceScore = 0;
 
-            if (handResults.landmarks && handResults.landmarks.length > 0) {
-                // HANDS ARE PRESENT: Reset drop counter
+            const handsPresent =
+                handResults.landmarks &&
+                handResults.landmarks.length > 0;
+
+            // Always draw detected hands, even after submission.
+            if (handsPresent) {
+                for (const landmarks of handResults.landmarks) {
+                    drawHandSkeleton(
+                        ctx,
+                        landmarks,
+                        canvas.width,
+                        canvas.height
+                    );
+                }
+            } else if (poseResults.landmarks && poseResults.landmarks.length > 0) {
+                for (const landmarks of poseResults.landmarks) {
+                    drawPoseSkeleton(
+                        ctx,
+                        landmarks,
+                        canvas.width,
+                        canvas.height
+                    );
+                }
+            }
+
+            // Once submitted, stop recording new signs.
+            if (signLockedRef.current) {
+                resultMessage = 'Sign submitted! Retry to practice again.';
+                confidenceScore = 100;
+            } else if (handsPresent) {
                 missingHandFramesRef.current = 0;
+
                 const currentHand = handResults.landmarks[0];
 
-                // If we weren't recording yet, START recording session now!
                 if (!isRecordingRef.current) {
                     isRecordingRef.current = true;
                     sessionFramesRef.current = [];
                 }
 
-                // Run detection on the current frame
                 const detected = detectSign(currentHand);
 
-                if (detected && !detected.includes("Unknown") && !detected.includes("No sign")) {
-                    // Save this frame's detection into our session buffer
-                    sessionFramesRef.current.push({ sign: detected, landmarks: currentHand });
-                    resultMessage = `Recording gesture... (${sessionFramesRef.current.length} frames)`;
+                if (
+                    detected &&
+                    !detected.includes('Unknown') &&
+                    !detected.includes('No sign')
+                ) {
+                    sessionFramesRef.current.push({
+                        sign: detected,
+                        landmarks: currentHand
+                    });
+
+                    resultMessage =
+                        `Recording gesture... (${sessionFramesRef.current.length} frames)`;
                     confidenceScore = 85;
                 } else {
                     resultMessage = 'Holding pose (Keep steady)...';
                     confidenceScore = 50;
                 }
-
-                for (const landmarks of handResults.landmarks) {
-                    drawHandSkeleton(ctx, landmarks, canvas.width, canvas.height);
-                }
             } else {
-                // HANDS ARE GONE (Potential drop)
+                // No hands are visible: wait before submitting the recording.
                 if (isRecordingRef.current) {
                     missingHandFramesRef.current += 1;
                     resultMessage = 'Hand dropped! Analyzing...';
-                    confidenceScore = 0;
 
-                    // If hands stay out of frame for ~12 frames (~400ms), finish the session and analyze!
                     if (missingHandFramesRef.current >= 12) {
                         isRecordingRef.current = false;
-                        processRecordedSession(sessionFramesRef.current);
+
+                        const framesToProcess = sessionFramesRef.current;
                         sessionFramesRef.current = [];
+                        missingHandFramesRef.current = 0;
+
+                        processRecordedSession(framesToProcess);
                     }
-                } else {
-                    if (poseResults.landmarks && poseResults.landmarks.length > 0) {
-                        resultMessage = 'Body Tracked (Raise your hand)';
-                        confidenceScore = 30;
-                        for (const landmarks of poseResults.landmarks) {
-                            drawPoseSkeleton(ctx, landmarks, canvas.width, canvas.height);
-                        }
-                    }
+                } else if (
+                    poseResults.landmarks &&
+                    poseResults.landmarks.length > 0
+                ) {
+                    resultMessage = 'Body tracked (Raise your hand)';
+                    confidenceScore = 30;
                 }
             }
 
-            if (onSignDetected && resultMessage !== lastSentSignRef.current) {
+            if (
+                onSignDetected &&
+                resultMessage !== lastSentSignRef.current
+            ) {
                 lastSentSignRef.current = resultMessage;
                 onSignDetected(resultMessage, confidenceScore);
             }
@@ -283,13 +350,80 @@ function CameraBox({
         requestRef.current = requestAnimationFrame(predictWebcam);
     };
 
-    // ... Keep your drawPoseSkeleton and drawHandSkeleton functions unchanged ...
-    const drawPoseSkeleton = (ctx, landmarks, width, height) => { /* ... */ };
-    const drawHandSkeleton = (ctx, landmarks, width, height) => { /* ... */ };
+
+    const drawHandSkeleton = (ctx, landmarks, width, height) => {
+        const connections = [
+            [0, 1], [1, 2], [2, 3], [3, 4],
+            [0, 5], [5, 6], [6, 7], [7, 8],
+            [5, 9], [9, 10], [10, 11], [11, 12],
+            [9, 13], [13, 14], [14, 15], [15, 16],
+            [13, 17], [17, 18], [18, 19], [19, 20],
+            [0, 17]
+        ];
+
+        ctx.strokeStyle = '#66e3b4';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+
+        connections.forEach(([start, end]) => {
+            ctx.beginPath();
+            ctx.moveTo(
+                landmarks[start].x * width,
+                landmarks[start].y * height
+            );
+            ctx.lineTo(
+                landmarks[end].x * width,
+                landmarks[end].y * height
+            );
+            ctx.stroke();
+        });
+
+        landmarks.forEach((point) => {
+            ctx.beginPath();
+            ctx.arc(point.x * width, point.y * height, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#238b70';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        });
+    };
+
+    const drawPoseSkeleton = (ctx, landmarks, width, height) => {
+        const connections = [
+            [11, 12], [11, 13], [13, 15],
+            [12, 14], [14, 16], [11, 23],
+            [12, 24], [23, 24], [23, 25],
+            [25, 27], [24, 26], [26, 28]
+        ];
+
+        ctx.strokeStyle = '#83aaff';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+
+        connections.forEach(([start, end]) => {
+            const a = landmarks[start];
+            const b = landmarks[end];
+
+            if (!a || !b || a.visibility < 0.5 || b.visibility < 0.5) {
+                return;
+            }
+
+            ctx.beginPath();
+            ctx.moveTo(a.x * width, a.y * height);
+            ctx.lineTo(b.x * width, b.y * height);
+            ctx.stroke();
+        });
+    };
+
 
     return (
         <div className="camera-feed-card">
-            {title && <h3 style={{ color: 'var(--primary)', margin: 0 }}>{title}</h3>}
+            {title && (
+                <h3 style={{ color: 'var(--primary)', margin: 0 }}>
+                    {title}
+                </h3>
+            )}
 
             <div className="video-wrapper" style={{ height }}>
                 {isCameraActive ? (
@@ -301,16 +435,28 @@ function CameraBox({
                             playsInline
                             muted
                             onLoadedData={() => {
-                                if (requestRef.current) cancelAnimationFrame(requestRef.current);
-                                requestRef.current = requestAnimationFrame(predictWebcam);
+                                if (requestRef.current) {
+                                    cancelAnimationFrame(requestRef.current);
+                                }
+
+                                requestRef.current =
+                                    requestAnimationFrame(predictWebcam);
                             }}
                         />
-                        {renderCanvas ? renderCanvas(canvasRef) : <canvas ref={canvasRef} className="mediapipe-canvas" />}
+
+                        {/* Use this canvas directly so canvasRef is guaranteed to attach. */}
+                        <canvas
+                            ref={canvasRef}
+                            className="mediapipe-canvas"
+                        />
                     </>
                 ) : (
                     <div className="camera-overlay-prompt">
                         <p>Camera is currently off</p>
-                        <button className="primary-action-btn" onClick={startCamera}>
+                        <button
+                            className="primary-action-btn"
+                            onClick={startCamera}
+                        >
                             Turn On Camera
                         </button>
                     </div>
@@ -324,6 +470,7 @@ function CameraBox({
             )}
         </div>
     );
+
 }
 
 export default CameraBox;

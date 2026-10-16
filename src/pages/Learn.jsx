@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import { lessonPath } from '../data/lessons/lessonPath';
 import { AvatarCanvas } from '../components/AvatarCanvas';
 
-const UNLOCKED_UNITS = new Set(['prologue', 'unit-1']);
+import CameraBox from "../components/CameraBox";
+import { evaluatePractice } from "../utils/practice/practiceLogic";
+
+// const UNLOCKED_UNITS = new Set(['prologue', 'unit-1']);
 
 const INITIAL_GOALS = [
   { id: 'signs', label: 'Learn 5 Signs Today' },
@@ -16,14 +19,10 @@ function Learn() {
   const [showUnitSelector, setShowUnitSelector] = useState(false);
   const [lockedPreviewUnit, setLockedPreviewUnit] = useState(null);
 
+  const [practiceResetKey, setPracticeResetKey] = useState(0);
+
   const [activeLesson, setActiveLesson] = useState(null);
-  const [completedLessons, setCompletedLessons] = useState(() =>
-    Object.entries(lessonPath).flatMap(([unitKey, unit]) =>
-      (unit.lessons || [])
-        .filter(lesson => lesson.status === 'completed')
-        .map(lesson => `${unitKey}:${lesson.id}`)
-    )
-  );
+  const [completedLessons, setCompletedLessons] = useState([]);
 
   const [currentSignIndex, setCurrentSignIndex] = useState(0);
   const [theoryIndex, setTheoryIndex] = useState(0);
@@ -87,20 +86,18 @@ function Learn() {
     setIsCorrect(false);
   };
 
+
   const handleSelectUnit = unitKey => {
     const targetUnit = lessonPath[unitKey];
 
     if (!targetUnit) return;
 
-    if (!UNLOCKED_UNITS.has(unitKey)) {
-      setLockedPreviewUnit({ ...targetUnit, id: unitKey });
-      return;
-    }
-
     setActiveUnitKey(unitKey);
     setActiveLesson(null);
     setShowUnitSelector(false);
+    setLockedPreviewUnit(null);
   };
+
 
   const handleStartLesson = lessonId => {
     setActiveLesson(lessonId);
@@ -157,6 +154,31 @@ function Learn() {
         ? previous.filter(id => id !== goalId)
         : [...previous, goalId]
     );
+  };
+
+  // PRACTICE
+  const [practiceResult, setPracticeResult] = useState(null);
+  const [cameraStatus, setCameraStatus] = useState(
+    "Turn on your camera when you're ready."
+  );
+
+  const handleSignSubmitted = (detection) => {
+    const result = evaluatePractice(currentSign?.word, detection);
+
+    setPracticeResult(result);
+  };
+
+  const handlePracticeRetry = () => {
+    setPracticeResult(null);
+    setCameraStatus("Try the sign again.");
+    setPracticeResetKey((key) => key + 1);
+  };
+
+  const handlePracticeContinue = () => {
+    if (practiceResult?.status !== "correct") return;
+
+    setPracticeResult(null);
+    handlePracticeComplete();
   };
 
   // Lesson screen
@@ -281,9 +303,8 @@ function Learn() {
 
                   {selectedAnswer && (
                     <p
-                      className={`learn-answer-feedback ${
-                        isCorrect ? 'feedback-correct' : 'feedback-incorrect'
-                      }`}
+                      className={`learn-answer-feedback ${isCorrect ? 'feedback-correct' : 'feedback-incorrect'
+                        }`}
                       role="status"
                     >
                       {isCorrect
@@ -303,31 +324,61 @@ function Learn() {
                   )}
                 </>
               ) : (
+
                 <>
                   <p className="learn-eyebrow">YOUR TURN</p>
                   <h2>Practice: {currentSign.word}</h2>
                   <p className="learn-hint">{currentSign.hint}</p>
 
-                  <div className="learn-avatar-practice">
-                    <AvatarCanvas currentSign={currentSign.word} />
-                  </div>
+                  <CameraBox
+                    key={practiceResetKey}
+                    title="SIGN PRACTICE"
+                    height="400px"
+                    onSignDetected={(message) => setCameraStatus(message)}
+                    onSignSubmitted={handleSignSubmitted}
 
-                  <p className="learn-practice-note">
-                    Practice the sign, then continue when you're ready.
+                  />
+
+                  <p className="learn-practice-note" aria-live="polite">
+                    {cameraStatus}
                   </p>
 
-                  <button
-                    type="button"
-                    className="learn-primary-button"
-                    onClick={handlePracticeComplete}
-                  >
-                    I’m ready to continue →
-                  </button>
-                  <p className="learn-demo-note">
-                    Practice is self-confirmed for now; webcam sign recognition
-                    is not connected yet.
-                  </p>
+                  {practiceResult && (
+                    <div
+                      className={`practice-feedback practice-feedback--${practiceResult.status}`}
+                      role="status"
+                    >
+                      <h3>
+                        {practiceResult.status === "correct"
+                          ? "Nice work!"
+                          : practiceResult.status === "incorrect"
+                            ? "Not quite yet"
+                            : "Try again"}
+                      </h3>
+
+                      <p>{practiceResult.message}</p>
+
+                      {practiceResult.status === "correct" ? (
+                        <button
+                          type="button"
+                          className="learn-primary-button"
+                          onClick={handlePracticeContinue}
+                        >
+                          Continue →
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="learn-primary-button"
+                          onClick={handlePracticeRetry}
+                        >
+                          Try again
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </>
+
               )}
             </section>
           ) : (
@@ -417,7 +468,6 @@ function Learn() {
             <div className="unit-dropdown-drawer">
               {Object.entries(lessonPath).map(([key, item]) => {
                 const selected = key === activeUnitKey;
-                const locked = !UNLOCKED_UNITS.has(key);
 
                 return (
                   <button
@@ -427,7 +477,6 @@ function Learn() {
                     className={[
                       'unit-dropdown-item',
                       selected ? 'selected' : '',
-                      locked ? 'locked' : '',
                     ].filter(Boolean).join(' ')}
                   >
                     <span>
@@ -435,15 +484,11 @@ function Learn() {
                         {item.title}
                       </span>
                       <span className="unit-dropdown-subtitle">
-                        {locked
-                          ? 'Locked · Preview unit'
-                          : selected
-                            ? 'Currently viewing'
-                            : 'Available'}
+                        {selected ? 'Currently viewing' : 'Available'}
                       </span>
                     </span>
                     <span aria-hidden="true">
-                      {selected ? '✓' : locked ? '🔒' : '→'}
+                      {selected ? '✓' : '→'}
                     </span>
                   </button>
                 );
@@ -583,9 +628,8 @@ function Learn() {
               <div
                 className="learn-progress-fill"
                 style={{
-                  width: `${
-                    (completedGoals.length / INITIAL_GOALS.length) * 100
-                  }%`,
+                  width: `${(completedGoals.length / INITIAL_GOALS.length) * 100
+                    }%`,
                 }}
               />
             </div>
