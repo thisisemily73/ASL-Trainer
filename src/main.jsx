@@ -8,10 +8,13 @@ import './styles/pages/Learn.css'
 import './styles/pages/Sandbox.css'
 import './styles/pages/Vocab.css'
 import './styles/pages/Profile.css'
+import './styles/pages/Landing.css'
 
 import './styles/components/Topbar.css'
 import './styles/components/VocabWordPage.css'
 import './styles/components/CameraBox.css'
+
+import './styles/context/AuthContext.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

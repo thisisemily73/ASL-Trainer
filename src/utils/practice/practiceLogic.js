@@ -5,34 +5,35 @@ function normalizeSign(value) {
     .replace(/[^a-z0-9]/g, "");
 }
 
+
 export function evaluatePractice(targetSign, detection) {
   const detectedSign =
     typeof detection === "string"
       ? detection
-      : detection?.word;
+      : detection?.word ?? detection?.sign ?? detection?.detectedSign;
 
-  if (!detectedSign) {
+  const target = normalizeSign(targetSign);
+  const detected = normalizeSign(detectedSign);
+
+  if (!target || !detected) {
     return {
       status: "retry",
-      detectedSign: null,
+      detectedSign: detectedSign || null,
       message: "We couldn't identify that sign. Try again with your hand clearly in view.",
     };
   }
 
-  const matches =
-    normalizeSign(targetSign) === normalizeSign(detectedSign);
-
-  if (matches) {
+  if (target === detected) {
     return {
       status: "correct",
       detectedSign,
-      message: "Nice work! The detected sign matches your target.",
+      message: `Correct! You signed "${targetSign}".`,
     };
   }
 
   return {
     status: "incorrect",
     detectedSign,
-    message: `We detected "${detectedSign}". That's not a match for this lesson's target yet. Try again!`,
+    message: `We detected "${detectedSign}", but this lesson is practicing "${targetSign}". Try again!`,
   };
 }

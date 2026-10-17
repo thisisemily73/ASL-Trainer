@@ -83,3 +83,11 @@
 - Removed hardcoded unit restrictions so learners can navigate between available units.
 - Removed automatic lesson completion based on predefined lesson statuses so completion reflects lessons finished during the session.
 - Added firebase.
+
+### October 17, 2026
+- Improved ASL sign recognition stability by adding a frame-based stabilization filter to reduce flickering between detected signs.
+- Debugged static alphabet recognition by inspecting finger-state classifications, thumb positions, hand rotation, and finger-spacing thresholds.
+- Cleaned up temporary debugging logs from the sign-recognition system.
+- Refined practice-answer evaluation to compare detected signs against lesson targets and provide feedback for correct, incorrect, and unrecognized signs.
+- Revamped the landing page UI to improve its visual presentation and consistency with ASLearn's design.
+- Redesigned the sign-in/create-account popup with a centered modal layout, dimmed and blurred backdrop, improved spacing, and more consistent button styling.

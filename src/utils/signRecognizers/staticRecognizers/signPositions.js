@@ -218,40 +218,75 @@ export const getHandRotation = (landmarks) => {
     return "SIDEWAYS";
 };
 
+
 export const isIndexAndMiddleTogether = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
+
     const palmWidth = getDistance(landmarks[indexMCP], landmarks[pinkyMCP]);
-    return getDistance(landmarks[indexTIP], landmarks[middleTIP]) < palmWidth * 0.35;
+
+    return getDistance(landmarks[indexTIP], landmarks[middleTIP])
+        < palmWidth * 0.48;
 };
 
 export const isMiddleAndRingTogether = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
+
     const palmWidth = getDistance(landmarks[indexMCP], landmarks[pinkyMCP]);
-    return getDistance(landmarks[middleTIP], landmarks[ringTIP]) < palmWidth * 0.35;
+
+    return getDistance(landmarks[middleTIP], landmarks[ringTIP])
+        < palmWidth * 0.48;
 };
 
 export const isRingAndPinkyTogether = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
+
     const palmWidth = getDistance(landmarks[indexMCP], landmarks[pinkyMCP]);
-    return getDistance(landmarks[ringTIP], landmarks[pinkyTIP]) < palmWidth * 0.35;
+
+    return getDistance(landmarks[ringTIP], landmarks[pinkyTIP])
+        < palmWidth * 0.78;
 };
 
-// Check for all 4 fingers being held together
+
+// Check if all 4 fingers are together
+
 export const areAllFingersTogether = (landmarks) => {
     if (!landmarks || landmarks.length === 0) return false;
-    return isIndexAndMiddleTogether(landmarks) &&
-        isMiddleAndRingTogether(landmarks) &&
-        isRingAndPinkyTogether(landmarks);
+
+    const palmWidth = getDistance(
+        landmarks[indexMCP],
+        landmarks[pinkyMCP]
+    );
+
+    const pairs = {
+        indexMiddle:
+            getDistance(landmarks[indexTIP], landmarks[middleTIP]) / palmWidth,
+
+        middleRing:
+            getDistance(landmarks[middleTIP], landmarks[ringTIP]) / palmWidth,
+
+        ringPinky:
+            getDistance(landmarks[ringTIP], landmarks[pinkyTIP]) / palmWidth,
+    };
+
+    const together =
+        pairs.indexMiddle < 0.48 &&
+        pairs.middleRing < 0.48 &&
+        pairs.ringPinky < 0.78;
+
+    return together;
 };
+
+
+
 
 export const getFingerSpacing = (landmarks) => {
     if (!landmarks || landmarks.length === 0) {
         return "UNKNOWN";
     }
 
-    return areAllFingersTogether(landmarks)
-        ? "TOGETHER"
-        : "APART";
+    const together = areAllFingersTogether(landmarks);
+
+    return together ? "TOGETHER" : "APART";
 };
 
 export const getHandOrientationY = (landmarks) => {

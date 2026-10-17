@@ -1,0 +1,184 @@
+/* =================================
+   ASLearn — Minimal Authentication
+   ================================= */
+
+.profile-container:has(form.settings-card) {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: calc(100vh - 100px);
+    padding: 72px 24px 48px;
+    box-sizing: border-box;
+    background: var(--background);
+}
+
+.profile-container>.profile-section:has(form.settings-card) {
+    width: 100%;
+    max-width: 360px;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Heading */
+.profile-container>.profile-section:has(form.settings-card) h2 {
+    margin: 0 0 8px;
+    color: var(--primary);
+    font-size: 1.8rem;
+    font-weight: 750;
+    line-height: 1.25;
+    letter-spacing: -0.04em;
+}
+
+body.dark-mode .profile-container>.profile-section:has(form.settings-card) h2 {
+    color: var(--text);
+}
+
+/* Intro text */
+.profile-container>.profile-section:has(form.settings-card)>p {
+    margin: 0;
+    color: var(--muted-text);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Form layout */
+.profile-container form.settings-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    margin: 30px 0 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Labels */
+.profile-container form.settings-card label.setting-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    width: 100%;
+    color: var(--text);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Inputs */
+.profile-container form.settings-card input:not([type="checkbox"]) {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    padding: 11px 12px;
+    color: var(--text);
+    background: var(--container);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 400;
+    outline: none;
+    box-shadow: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.profile-container form.settings-card input:not([type="checkbox"]):focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0, 168, 168, 0.12);
+}
+
+/* Sign-in button */
+.profile-container form.settings-card button[type="submit"] {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 2px;
+    padding: 12px 16px;
+    color: #FFFFFF;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 650;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background-color 150ms ease;
+}
+
+.profile-container form.settings-card button[type="submit"]:hover:not(:disabled) {
+    color: #FFFFFF;
+    background: var(--hover-accent);
+    border-color: var(--hover-accent);
+}
+
+.profile-container form.settings-card button[type="submit"]:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Sign-up / sign-in switch */
+.profile-container>.profile-section>.learn-text-button {
+    display: block;
+    margin: 20px auto 0;
+    padding: 4px 0;
+    color: var(--muted-text);
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.profile-container>.profile-section>.learn-text-button:hover {
+    color: var(--accent);
+}
+
+/* Error messages */
+.profile-container form.settings-card [role="alert"] {
+    margin: 0;
+    padding: 10px 12px;
+    color: #C53030;
+    background: transparent;
+    border-left: 3px solid #C53030;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+body.dark-mode .profile-container form.settings-card [role="alert"] {
+    color: #FEB2B2;
+    border-left-color: #FEB2B2;
+}
+
+
+/* Fix auth page horizontal centering */
+.profile-container:has(form.settings-card) {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+}
+
+.profile-container>.profile-section:has(form.settings-card) {
+    width: 100%;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+    flex: 0 1 360px;
+}
+
+
+/* Mobile */
+@media (max-width: 480px) {
+    .profile-container:has(form.settings-card) {
+        min-height: auto;
+        padding: 44px 22px;
+    }
+}

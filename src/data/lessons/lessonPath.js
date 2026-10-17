@@ -1,59 +1,77 @@
 export const lessonPath = {
+
   "prologue": {
     title: "PROLOGUE: THE FIVE PARAMETERS",
     lessons: [
       {
         id: "prologue-parameters",
         label: "THE 5 CORE PARAMETERS",
-        status: "completed",
-        type: "theory", // Marks this as a reading/theory lesson instead of webcam sandbox
+        type: "practice",
+        signs: [
+          {
+            word: "A",
+            hint: "Look at the handshape. Which letter is shown?",
+            options: ["A", "B", "C", "D"],
+            correctAnswer: "A",
+          },
+          {
+            word: "B",
+            hint: "Compare the handshape with the previous sign.",
+            options: ["A", "B", "C", "D"],
+            correctAnswer: "B",
+          },
+        ],
         content: [
           {
             title: "Handshape",
-            description: "The specific configuration or shape your hand makes (such as a fist, open hand, or specific letter).",
+            description:
+              "The configuration of your hand, such as a fist, an open hand, or a particular letter shape.",
           },
           {
             title: "Palm Orientation",
-            description: "The direction your palm faces (left, right, forward, or backward).",
-            signs: [
-              {
-                word: "Direction",
-                hint: "Make a fist with thumb resting on the side of index finger.",
-                options: ["Left", "Right", "Forward", "Backward"],
-              }
-            ]
+            description:
+              "The direction your palm faces. A sign can change meaning when the palm faces a different direction.",
           },
           {
             title: "Location",
-            description: "The specific place on your body or in the neutral signing space where the sign is made."
+            description:
+              "Where you make a sign, such as near your forehead, chest, or in the space in front of your body.",
           },
           {
             title: "Movement",
-            description: "The action or path your hands take when making the sign (such as moving forward, tapping, or twisting)."
+            description:
+              "The path or action your hands take while signing.",
           },
           {
-            title: "Non-Manual Markers (NMMs)",
-            description: "Facial expressions, eye gazes, and body movements that add grammar, emotion, and tone to your signs."
-          }
-        ]
+            title: "Non-Manual Markers",
+            description:
+              "Facial expressions, eye gaze, and body movements that contribute to ASL grammar and meaning.",
+          },
+        ],
       },
       {
         id: "prologue-space",
         label: "DOMINANT & NON-DOMINANT HANDS",
-        status: "completed",
         type: "theory",
         content: [
           {
-            title: "The Dominant Hand",
-            description: "If you are right-handed, your right hand does the active, moving part for most one-handed and two-handed signs. Left-handed people use their left hand."
+            title: "Your dominant hand",
+            description:
+              "Your dominant hand is generally the hand you use for the active movement in many one-handed signs. Right-handed signers commonly use their right hand; left-handed signers commonly use their left.",
           },
           {
-            title: "The Non-Dominant Hand",
-            description: "This hand acts as a stable base or supportive platform when a sign requires two hands."
-          }
-        ]
-      }
-    ]
+            title: "Your non-dominant hand",
+            description:
+              "In many two-handed signs, one hand moves while the other provides a base or support. The roles depend on the particular sign.",
+          },
+          {
+            title: "Try a quick check",
+            description:
+              "Think about which hand you naturally use for precise movements. You can use either hand when learning ASL, and your signing should follow the conventions of each sign.",
+          },
+        ],
+      },
+    ],
   },
   "unit-1": {
     title: "UNIT 1: FUNDAMENTALS",

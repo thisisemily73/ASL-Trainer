@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import { lessonPath } from '../data/lessons/lessonPath';
 import { AvatarCanvas } from '../components/AvatarCanvas';
 
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
 import CameraBox from "../components/CameraBox";
 import { evaluatePractice } from "../utils/practice/practiceLogic";
 
@@ -15,6 +18,8 @@ const INITIAL_GOALS = [
 ];
 
 function Learn() {
+  const { user, loading: authLoading } = useAuth();
+
   const [activeUnitKey, setActiveUnitKey] = useState('prologue');
   const [showUnitSelector, setShowUnitSelector] = useState(false);
   const [lockedPreviewUnit, setLockedPreviewUnit] = useState(null);
@@ -90,7 +95,12 @@ function Learn() {
   const handleSelectUnit = unitKey => {
     const targetUnit = lessonPath[unitKey];
 
-    if (!targetUnit) return;
+    if (!targetUnit || authLoading) return;
+
+    if (!user && unitKey !== 'prologue') {
+      promptForAccount(targetUnit.title);
+      return;
+    }
 
     setActiveUnitKey(unitKey);
     setActiveLesson(null);
@@ -99,7 +109,20 @@ function Learn() {
   };
 
 
-  const handleStartLesson = lessonId => {
+  const handleStartLesson = (lessonId, index) => {
+    if (authLoading) return;
+
+    const isFreePreview =
+      activeUnitKey === 'prologue' && index === 0;
+
+    if (!user && !isFreePreview) {
+      const selectedLesson = lessonPath[activeUnitKey]?.lessons
+        .find(lesson => lesson.id === lessonId);
+
+      promptForAccount(selectedLesson?.label || 'More ASL lessons');
+      return;
+    }
+
     setActiveLesson(lessonId);
     setCurrentSignIndex(0);
     setTheoryIndex(0);
@@ -162,9 +185,19 @@ function Learn() {
     "Turn on your camera when you're ready."
   );
 
+  // const handleSignSubmitted = (detection) => {
+  //   const result = evaluatePractice(currentSign?.word, detection);
+
+  //   setPracticeResult(result);
+  // };
+
   const handleSignSubmitted = (detection) => {
+    console.log("TARGET SIGN:", currentSign?.word);
+    console.log("RAW DETECTION:", detection);
+
     const result = evaluatePractice(currentSign?.word, detection);
 
+    console.log("PRACTICE RESULT:", result);
     setPracticeResult(result);
   };
 
@@ -179,6 +212,15 @@ function Learn() {
 
     setPracticeResult(null);
     handlePracticeComplete();
+  };
+
+  // AUTH
+  const promptForAccount = (title = 'More ASL lessons') => {
+    setLockedPreviewUnit({
+      accountRequired: true,
+      title,
+      lessons: [],
+    });
   };
 
   // Lesson screen
@@ -402,20 +444,27 @@ function Learn() {
   // Main Learn page
   return (
     <div className="page learn-content-grid">
+
       {lockedPreviewUnit && (
         <div
           className="learn-modal-backdrop"
           onClick={() => setLockedPreviewUnit(null)}
         >
-          <section
-            className="learn-locked-modal"
+          <div
+            className={`learn-modal-card ${lockedPreviewUnit.accountRequired ? "learn-account-modal" : ""
+              }`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="locked-unit-title"
-            onClick={event => event.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="learn-modal-header">
-              <span className="learn-locked-label">Locked unit</span>
+              <span className="learn-locked-label">
+                {lockedPreviewUnit.accountRequired
+                  ? "FREE ACCOUNT"
+                  : "LOCKED UNIT"}
+              </span>
+
               <button
                 type="button"
                 className="learn-close-button"
@@ -426,28 +475,60 @@ function Learn() {
               </button>
             </div>
 
-            <h2 id="locked-unit-title">{lockedPreviewUnit.title}</h2>
-            <p>Complete the earlier lessons to unlock this unit.</p>
+            <h2 id="locked-unit-title">
+              {lockedPreviewUnit.accountRequired
+                ? "Keep your ASL journey going."
+                : lockedPreviewUnit.title}
+            </h2>
 
-            <div className="learn-locked-lessons">
-              <p>LESSONS IN THIS UNIT</p>
-              <ul>
-                {(lockedPreviewUnit.lessons || []).map(lesson => (
-                  <li key={lesson.id}>{lesson.label}</li>
-                ))}
-              </ul>
-            </div>
+            <p>
+              {lockedPreviewUnit.accountRequired
+                ? "Create a free account to unlock the full lesson path and continue learning beyond the introductory lesson."
+                : "Complete the earlier lessons to unlock this unit."}
+            </p>
 
-            <button
-              type="button"
-              className="learn-primary-button"
-              onClick={() => setLockedPreviewUnit(null)}
-            >
-              Got it
-            </button>
-          </section>
+            {!lockedPreviewUnit.accountRequired && (
+              <div className="learn-locked-lessons">
+                <p>LESSONS IN THIS UNIT</p>
+                <ul>
+                  {(lockedPreviewUnit.lessons || []).map((lesson) => (
+                    <li key={lesson.id}>{lesson.label}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {lockedPreviewUnit.accountRequired ? (
+              <div className="learn-lesson-actions">
+                <Link
+                  to="/profile"
+                  className="learn-primary-button"
+                  onClick={() => setLockedPreviewUnit(null)}
+                >
+                  Sign in or create account →
+                </Link>
+
+                <button
+                  type="button"
+                  className="learn-secondary-button"
+                  onClick={() => setLockedPreviewUnit(null)}
+                >
+                  Maybe later
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="learn-primary-button"
+                onClick={() => setLockedPreviewUnit(null)}
+              >
+                Got it
+              </button>
+            )}
+          </div>
         </div>
       )}
+
 
       <main className="path-main-immersive">
         <section className="unit-banner-card">
@@ -484,7 +565,11 @@ function Learn() {
                         {item.title}
                       </span>
                       <span className="unit-dropdown-subtitle">
-                        {selected ? 'Currently viewing' : 'Available'}
+                        {selected
+                          ? 'Currently viewing'
+                          : !user && key !== 'prologue'
+                            ? 'Sign in to unlock'
+                            : 'Available'}
                       </span>
                     </span>
                     <span aria-hidden="true">
@@ -573,17 +658,29 @@ function Learn() {
                   </div>
                 </div>
 
+
                 {locked ? (
-                  <span className="lesson-status-locked">Locked</span>
+                  !user ? (
+                    <button
+                      type="button"
+                      className="start-btn"
+                      onClick={() => promptForAccount(lesson.label)}
+                    >
+                      Unlock →
+                    </button>
+                  ) : (
+                    <span className="lesson-status-locked">Locked</span>
+                  )
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleStartLesson(lesson.id)}
+                    onClick={() => handleStartLesson(lesson.id, index)}
                     className="start-btn"
                   >
                     {completed ? 'Review' : 'Start'} →
                   </button>
                 )}
+
               </article>
             );
           })}

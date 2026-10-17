@@ -11,7 +11,7 @@ import * as specialPositions from './specialPositions'
  */
 export const ALPHABET_SIGN_MATRIX = {
     "A": {
-        fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["TUCKED"]],
+        fingers: [["TUCKED"], ["TUCKED"], ["TUCKED"], ["TUCKED", "CURLED"]],
         thumb: ["UP"],
         thumbShape: ["STRAIGHT"],
         rotation: ["PALM_OUT", "PALM_IN"],
@@ -27,10 +27,10 @@ export const ALPHABET_SIGN_MATRIX = {
     },
     // C: Fingers relaxed or curved ("CURLED" or "CLAWED"). Hand sideways.
     "C": {
-        fingers: [["CURLED", "CLAWED"], ["CURLED", "CLAWED"], ["CURLED", "CLAWED"], ["CURLED", "CLAWED"]],
+        fingers: [["CURLED"], ["CURLED"], ["CURLED"], ["CURLED"]],
         thumb: ["OUT_FRONT", "UP"],
         thumbShape: ["STRAIGHT"],
-        rotation: ["SIDEWAYS", "PALM_OUT"],
+        rotation: ["SIDEWAYS"],
         spacing: ["TOGETHER", "APART"]
     },
     "D": {
@@ -227,6 +227,7 @@ export const detectStaticAlphabetSign = (landmarks) => {
         } else {
             spacingMatches = spacingRule.includes(spacingS);
         }
+
 
         if (
             fingersMatch &&
