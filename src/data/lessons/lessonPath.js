@@ -6,48 +6,34 @@ export const lessonPath = {
       {
         id: "prologue-parameters",
         label: "THE 5 CORE PARAMETERS",
-        type: "practice",
-        signs: [
-          {
-            word: "A",
-            hint: "Look at the handshape. Which letter is shown?",
-            options: ["A", "B", "C", "D"],
-            correctAnswer: "A",
-          },
-          {
-            word: "B",
-            hint: "Compare the handshape with the previous sign.",
-            options: ["A", "B", "C", "D"],
-            correctAnswer: "B",
-          },
-        ],
+        type: "theory",
         content: [
           {
-            title: "Handshape",
+            title: "1. Handshape",
             description:
-              "The configuration of your hand, such as a fist, an open hand, or a particular letter shape.",
+              "Handshape is the configuration of the hand and fingers during a sign. Your hand might form a fist, an open hand, or a specific shape. Small differences in finger position can distinguish signs."
           },
           {
-            title: "Palm Orientation",
+            title: "2. Palm Orientation",
             description:
-              "The direction your palm faces. A sign can change meaning when the palm faces a different direction.",
+              "Palm orientation describes the direction your palm faces while signing. Your palm might face toward you, away from you, upward, or to the side. Orientation can affect a sign's meaning."
           },
           {
-            title: "Location",
+            title: "3. Location",
             description:
-              "Where you make a sign, such as near your forehead, chest, or in the space in front of your body.",
+              "Location is where a sign is produced. A sign may be made near the forehead, near the chest, or in the space in front of the body. The location is part of the sign, not just where your hand happens to be."
           },
           {
-            title: "Movement",
+            title: "4. Movement",
             description:
-              "The path or action your hands take while signing.",
+              "Movement describes how the hands move during a sign. This can include the direction, path, repetition, or type of movement. Some signs are stationary, while others involve one or more movements."
           },
           {
-            title: "Non-Manual Markers",
+            title: "5. Non-Manual Markers",
             description:
-              "Facial expressions, eye gaze, and body movements that contribute to ASL grammar and meaning.",
-          },
-        ],
+              "Non-manual markers include facial expressions, eye gaze, and head or body movements. They can contribute to ASL grammar and meaning, including how questions and other sentence types are expressed. ASL is not simply English expressed with your hands."
+          }
+        ]
       },
       {
         id: "prologue-space",

@@ -7,7 +7,7 @@ function Topbar() {
             <div className="topbar-right">
 
                 <span className="links">
-                    <a href="/">Learn</a>
+                    <a href="/learn">Learn</a>
                     <a href="/sandbox">Sandbox</a>
                     <a href="/vocab">Vocabulary</a>
                     <a href="/profile">Profile</a>

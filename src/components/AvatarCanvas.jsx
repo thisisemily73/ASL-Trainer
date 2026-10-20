@@ -340,6 +340,25 @@ function HandModel({ currentSign }) {
           node.quaternion.clone()
         );
       }
+
+      if (node.isMesh && node.material) {
+        // Clone the material so the original GLB stays unchanged.
+        const materials = Array.isArray(node.material)
+          ? node.material.map((material) => material.clone())
+          : node.material.clone();
+
+        node.material = materials;
+
+        const materialList = Array.isArray(materials)
+          ? materials
+          : [materials];
+
+        materialList.forEach((material) => {
+          if (material.color) {
+            material.color.set('#A7B8CC');
+          }
+        });
+      }
     });
   }
 
@@ -364,18 +383,33 @@ function HandModel({ currentSign }) {
   );
 }
 
-export function AvatarCanvas({ currentSign }) {
+
+export function AvatarCanvas({ currentSign, variant = 'landing' }) {
   const controlsRef = useRef(null);
 
   return (
-    <div className="relative flex h-[400px] w-full items-center justify-center overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 shadow-inner">
+    <div className={`avatar-canvas ${variant === 'learning' ? 'avatar-canvas--learning' : 'avatar-canvas--landing'}`}>
       <button
         type="button"
         onClick={() => controlsRef.current?.reset()}
-        className="absolute right-3 top-3 z-10 cursor-pointer rounded-md border border-slate-700 bg-slate-800/80 px-2.5 py-1 text-xs text-slate-300 backdrop-blur-sm transition-all hover:bg-slate-700"
-        title="Reset View"
+        className="avatar-reset"
+        title="Reset view"
+        aria-label="Reset hand model view"
       >
-        Reset
+        <svg
+          viewBox="0 0 24 24"
+          width="17"
+          height="17"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M3 11a9 9 0 1 1 2.6 6.4" />
+          <path d="M3 4v7h7" />
+        </svg>
       </button>
 
       <Canvas
@@ -384,20 +418,38 @@ export function AvatarCanvas({ currentSign }) {
           up: [0, 0, 1],
           fov: 45,
         }}
+        style={{ width: '100%', height: '100%' }}
       >
-        <ambientLight intensity={1.5} />
-        <directionalLight position={[5, 5, 5]} intensity={2} />
-        <directionalLight position={[-5, -5, -5]} intensity={0.5} />
+        <ambientLight intensity={0.8} />
+
+        <directionalLight
+          position={[3, -4, 6]}
+          intensity={2.2}
+        />
+
+        <directionalLight
+          position={[-4, 2, 3]}
+          intensity={0.8}
+        />
+
+        <directionalLight
+          position={[0, 5, -3]}
+          intensity={0.4}
+        />
 
         <HandModel currentSign={currentSign} />
 
         <OrbitControls
           ref={controlsRef}
           enableZoom
-          enablePan
+          enablePan={false}
           enableRotate
-          minPolarAngle={Math.PI / 2}
-          maxPolarAngle={Math.PI / 2}
+          enableDamping
+          dampingFactor={0.08}
+          minDistance={2.5}
+          maxDistance={6}
+          minPolarAngle={0.2}
+          maxPolarAngle={Math.PI - 0.2}
         />
       </Canvas>
     </div>

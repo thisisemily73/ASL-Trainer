@@ -1,11 +1,15 @@
 
 import { useEffect, useState } from 'react';
+
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   updateProfile,
 } from 'firebase/auth';
+
 import {
   doc,
   getDoc,
@@ -19,6 +23,8 @@ const DEFAULT_PREFERENCES = {
   highContrastSkeletons: true,
   audioFeedbackCues: false,
 };
+
+const googleProvider = new GoogleAuthProvider();
 
 function Profile() {
   const { user, loading } = useAuth();
@@ -156,6 +162,43 @@ function Profile() {
     }
   }
 
+  async function handleGoogleSignIn() {
+    setMessage('');
+    setBusy(true);
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const userRef = doc(db, 'users', result.user.uid);
+      const snapshot = await getDoc(userRef);
+
+      // Create a Firestore profile only for a new user.
+      if (!snapshot.exists()) {
+        await setDoc(userRef, {
+          preferences: DEFAULT_PREFERENCES,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    } catch (error) {
+      const messages = {
+        'auth/popup-closed-by-user': 'Sign-in was cancelled. Try again when you’re ready.',
+        'auth/popup-blocked': 'Your browser blocked the sign-in popup. Allow popups and try again.',
+        'auth/account-exists-with-different-credential':
+          'An account already exists with this email using another sign-in method.',
+        'auth/unauthorized-domain':
+          'This website domain is not authorized in Firebase.',
+        'auth/network-request-failed':
+          'Network error. Check your connection and try again.',
+      };
+
+      setMessage(
+        messages[error.code] ||
+        'Google sign-in failed. Please try again.'
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignOut() {
     setMessage('');
 
@@ -229,6 +272,42 @@ function Profile() {
                   : 'Create account'}
             </button>
           </form>
+
+          <button
+            type="button"
+            className="google-sign-in-button"
+            onClick={handleGoogleSignIn}
+            disabled={busy}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 48 48"
+              aria-hidden="true"
+            >
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 3.17 13.22l7.98 6.19C13.05 13.72 18.05 9.5 24 9.5Z"
+                transform="translate(0 4)"
+              />
+              <path
+                fill="#4285F4"
+                d="M47.98 24.55c0-1.57-.15-3.09-.39-4.55H24v9.02h13.48c-.6 2.96-2.29 5.48-4.79 7.18l7.73 6C44.93 37.8 47.98 31.7 47.98 24.55Z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.15 28.59a14.4 14.4 0 0 1 0-9.18l-7.98-6.19a24 24 0 0 0 0 21.56l7.98-6.19Z"
+                transform="translate(0 4)"
+              />
+              <path
+                fill="#34A853"
+                d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.14 1.44-4.89 2.3-8.18 2.3-5.95 0-10.95-4.22-12.85-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"
+                transform="translate(0 -4)"
+              />
+            </svg>
+
+            {busy ? 'Please wait…' : 'Continue with Google'}
+          </button>
 
           <button
             type="button"

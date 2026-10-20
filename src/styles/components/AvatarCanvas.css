@@ -1,0 +1,55 @@
+.avatar-canvas {
+    position: relative;
+    width: 100%;
+    max-width: 390px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    margin-inline: auto;
+    overflow: hidden;
+    border: 1px solid #dce8e6;
+    border-radius: 14px;
+    background: #edf5f3;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.avatar-canvas canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.avatar-reset {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid #dce5e8;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    color: #1b2a4a;
+    cursor: pointer;
+}
+
+.avatar-reset:hover {
+    background: #fff;
+}
+
+.avatar-reset:focus-visible {
+    outline: 2px solid #008f8f;
+    outline-offset: 3px;
+}
+
+.avatar-canvas--learning {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  aspect-ratio: auto;
+  margin-inline: 0;
+  border-radius: 10px;
+}

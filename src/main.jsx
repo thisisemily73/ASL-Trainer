@@ -13,6 +13,7 @@ import './styles/pages/Landing.css'
 import './styles/components/Topbar.css'
 import './styles/components/VocabWordPage.css'
 import './styles/components/CameraBox.css'
+import './styles/components/AvatarCanvas.css'
 
 import './styles/context/AuthContext.css'
 

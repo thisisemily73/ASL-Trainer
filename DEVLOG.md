@@ -91,3 +91,8 @@
 - Refined practice-answer evaluation to compare detected signs against lesson targets and provide feedback for correct, incorrect, and unrecognized signs.
 - Revamped the landing page UI to improve its visual presentation and consistency with ASLearn's design.
 - Redesigned the sign-in/create-account popup with a centered modal layout, dimmed and blurred backdrop, improved spacing, and more consistent button styling.
+
+### October 19, 2026
+- Restyled landing page and added interactive element
+- Gave hand a cool blue-gray color
+- Created five core parameters prologue lesson.

@@ -464,25 +464,42 @@
   white-space: pre-line;
 }
 
-.learn-avatar-preview {
+.learn-avatar-preview,
+.learn-avatar-practice {
+  width: 100%;
   height: 280px;
-  margin-bottom: 24px;
+  margin: 0 0 24px;
   overflow: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   background: #f8fafc;
+  box-sizing: border-box;
 }
 
-.learn-avatar-preview > *,
-.learn-avatar-practice > * {
+/* Practice panel is slightly taller */
+.learn-avatar-practice {
+  height: 320px;
+  margin: 20px 0;
+}
+
+/* Make the learning avatar fill its rectangular panel */
+.learn-avatar-preview > .avatar-canvas,
+.learn-avatar-practice > .avatar-canvas {
   width: 100%;
+  max-width: none;
   height: 100%;
+  aspect-ratio: auto;
+  margin: 0;
+  border: none;
+  border-radius: inherit;
+  flex-shrink: 1;
 }
 
-.learn-avatar-preview canvas,
-.learn-avatar-practice canvas {
+.learn-avatar-preview .avatar-canvas canvas,
+.learn-avatar-practice .avatar-canvas canvas {
   display: block;
-  max-width: 100%;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .learn-answer-grid {
