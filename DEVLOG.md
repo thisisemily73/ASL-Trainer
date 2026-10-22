@@ -95,4 +95,9 @@
 ### October 19, 2026
 - Restyled landing page and added interactive element
 - Gave hand a cool blue-gray color
-- Created five core parameters prologue lesson.
+- Created five core parameters prologue lesson
+
+### October 22, 2026
+- Reorganized Learn.jsx into separate files
+- Created Google Doc to organize course curriculum and material
+- Added unit 1 material to lessonPath.js and created logic to manage lessons (useLearn.js)

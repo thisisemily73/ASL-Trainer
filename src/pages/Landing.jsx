@@ -19,7 +19,7 @@ function Landing() {
       <section className="landing-hero">
         <div className="hero-intro">
           <span className="landing-eyebrow">
-            A LANGUAGE WORTH SHARING
+            LESSONS FOR INCLUSIVITY
           </span>
 
           <h1>
